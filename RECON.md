@@ -51,3 +51,20 @@ script ranks individuals by a migratory-amplitude score (bbox latitude span,
 tie-broken by point count) and picks the best complete track.
 
 Override with `pnpm seed-from-gbif <datasetKey>` to feature a different animal.
+
+## The deep-offset wall (important, empirical)
+
+GBIF occurrence search **degrades hard at deep offsets**. With an `organismID`
+filter, offsets up to ~9,300 return in ~0.3s but **offset 12,000 takes 30s+**
+(effectively a timeout). The no-auth search API therefore can't page an
+individual with more than ~10k fixes — and the authenticated download API
+(Phase 3) is the right tool for those.
+
+Two more gotchas that cost real time here:
+- **Node `fetch` has no default timeout** and reuses keep-alive sockets, so a
+  stale socket hangs forever. `lib/sources/gbif.ts` now sets an 8s per-request
+  timeout + retry and `Connection: close`.
+- So the seed selects only **fully-pageable** individuals (≤ 8,000 fixes) to
+  guarantee a *complete* track without auth. That's why the first seed is
+  **Oberon** (b8453, 7,462 fixes, 4,206 km, 440 days, NL→Iberia) rather than the
+  higher-count Wout (19,783) whose full track needs the download API.
