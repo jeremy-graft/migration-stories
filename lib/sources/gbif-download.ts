@@ -15,6 +15,10 @@ export interface DownloadPredicateOpts {
   licenses?: GbifLicense[];
   /** GBIF taxonKey, e.g. "212" = Aves. */
   taxonKey?: string;
+  /** Restrict to specific datasets. */
+  datasetKeys?: string[];
+  /** Restrict to a publishing organization (e.g. INBO). */
+  publishingOrg?: string;
   /** ISO country code, e.g. "NL". */
   country?: string;
   /** WKT polygon for spatial bounds (within predicate). */
@@ -31,6 +35,8 @@ export function buildDownloadPredicate(opts: DownloadPredicateOpts): object {
     { type: "equals", key: "OCCURRENCE_STATUS", value: "PRESENT" },
   ];
   if (opts.taxonKey) predicates.push({ type: "equals", key: "TAXON_KEY", value: opts.taxonKey });
+  if (opts.datasetKeys?.length) predicates.push({ type: "in", key: "DATASET_KEY", values: opts.datasetKeys });
+  if (opts.publishingOrg) predicates.push({ type: "equals", key: "PUBLISHING_ORG", value: opts.publishingOrg });
   if (opts.country) predicates.push({ type: "equals", key: "COUNTRY", value: opts.country });
   if (opts.withCoordinate !== false) predicates.push({ type: "equals", key: "HAS_COORDINATE", value: "true" });
   if (opts.wkt) predicates.push({ type: "within", geometry: opts.wkt });
