@@ -1,0 +1,24 @@
+# dependencies
+node_modules
+.pnpm-store
+
+# next
+.next
+out
+next-env.d.ts
+
+# typescript
+*.tsbuildinfo
+
+# env / secrets
+.env
+.env*.local
+
+# misc
+*.log
+.DS_Store
+.turbo
+
+# data artifacts (regenerable caches; keep out of git)
+/tmp
+/.cache

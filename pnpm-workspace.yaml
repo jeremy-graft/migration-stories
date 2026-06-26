@@ -1,0 +1,5 @@
+allowBuilds:
+  esbuild: true
+  sharp: true
+# Don't shell out to `pnpm install` before each `pnpm run` script.
+verifyDepsBeforeRun: false
