@@ -31,7 +31,7 @@ const COMMON_NAMES: Record<string, string> = {
   "Larus argentatus": "Herring gull",
 };
 
-const TOP_CANDIDATES = 6;     // how many individuals to fully pull + compare
+const TOP_CANDIDATES = 3;     // how many individuals to fully pull + compare
 const PER_INDIVIDUAL_CAP = 30000;
 const MIN_POINTS = 200;
 const MIN_DAYS = 45;          // require a real seasonal span

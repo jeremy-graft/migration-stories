@@ -97,11 +97,13 @@ export async function* gbifOccurrences(
     });
     if (organismID) params.set("organismID", organismID);
     const j = await fetchJson(`${GBIF}/occurrence/search?${params.toString()}`);
-    for (const r of j.results ?? []) {
+    const results = j.results ?? [];
+    for (const r of results) {
       yield r as GbifOccurrence;
       if (++yielded >= cap) break;
     }
-    if (j.endOfRecords) break;
+    // Stop on endOfRecords OR an empty page (guards against a pathological loop).
+    if (j.endOfRecords || results.length === 0) break;
     offset += limit;
   }
 }
