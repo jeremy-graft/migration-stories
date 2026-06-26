@@ -100,41 +100,23 @@ async function parseArchive(zipPath: string): Promise<Map<string, DatasetAccum>>
   return byDataset;
 }
 
-async function main() {
-  const arg = process.argv[2] || "inbo";
-  const { opts, label } = predicateForArg(arg);
+/** Run one download (a single predicate) end-to-end: download → parse → ingest. */
+async function ingestOne(opts: DownloadPredicateOpts, label: string, auth: string, email: string, user: string) {
   const predicate = buildDownloadPredicate(opts);
-
-  const user = process.env.GBIF_USER, pass = process.env.GBIF_PASS, email = process.env.GBIF_EMAIL;
-  if (!user || !pass || !email) {
-    console.log(`GBIF credentials absent — skipping live download (see RUN_WHEN_READY.md).`);
-    console.log(`Target: ${label}\nPredicate that WOULD be submitted:\n`, JSON.stringify(predicate, null, 2));
-    process.exit(0);
-  }
-
-  console.log(`\n=== GBIF batch ingest: ${label} ===`);
-  const auth = "Basic " + Buffer.from(`${user}:${pass}`).toString("base64");
   const body = buildDownloadRequest({ creator: user, email, predicate, format: "DWCA" });
-
-  console.log("Requesting download…");
+  console.log(`\n— ${label}: requesting download…`);
   const key = await requestDownload(body, auth);
-  console.log("downloadKey:", key);
   const { doi, url, total } = await pollDownload(key);
-  console.log(`✓ Ready. ${total} records. Download DOI (cite this): ${doi}`);
+  console.log(`  ready: ${total} records · DOI ${doi}`);
 
-  // Download the archive to a temp file, then stream-parse it.
   const dir = mkdtempSync(join(tmpdir(), "gbif-"));
   const zipPath = join(dir, "dwca.zip");
   try {
-    console.log("Downloading archive…");
     const resp = await fetch(url, { headers: { Authorization: auth } });
     if (!resp.ok || !resp.body) throw new Error(`archive download failed: ${resp.status}`);
     await pipeline(Readable.fromWeb(resp.body as any), createWriteStream(zipPath));
-
-    console.log("Parsing archive…");
     const byDataset = await parseArchive(zipPath);
 
-    // Ingest each dataset (fetch metadata for attribution).
     let totalInd = 0, totalPts = 0;
     for (const [datasetKey, acc] of byDataset) {
       const meta = await gbifDataset(datasetKey).catch(() => null);
@@ -151,13 +133,55 @@ async function main() {
         },
         individuals,
       );
-      console.log(`  ${meta?.title?.slice(0, 50) ?? datasetKey}: +${summary.individualsWritten} individuals, +${summary.pointsWritten} points (${summary.skipped} skipped)`);
+      console.log(`  ✓ ${meta?.title?.slice(0, 50) ?? datasetKey}: +${summary.individualsWritten} ind, +${summary.pointsWritten} pts (${summary.skipped} skipped)`);
       totalInd += summary.individualsWritten; totalPts += summary.pointsWritten;
     }
-    console.log(`\n✓ Ingested ${totalInd} individuals · ${totalPts} track points across ${byDataset.size} dataset(s).`);
-    console.log(`  download DOI: ${doi}`);
+    return { individuals: totalInd, points: totalPts, doi };
   } finally {
     rmSync(dir, { recursive: true, force: true });
+  }
+}
+
+/** INBO telemetry datasetKeys, read from our own catalog (the migration core). */
+async function inboDatasetKeys(): Promise<string[]> {
+  const { neon } = await import("@neondatabase/serverless");
+  const sql = neon(process.env.DATABASE_URL!);
+  const rows = await sql`select id from datasets where publisher ilike ${"%INBO%"} order by record_count desc nulls last`;
+  return (rows as Array<{ id: string }>).map((r) => r.id.replace(/^gbif:/, ""));
+}
+
+async function main() {
+  const arg = process.argv[2] || "inbo";
+  const user = process.env.GBIF_USER, pass = process.env.GBIF_PASS, email = process.env.GBIF_EMAIL;
+
+  if (!user || !pass || !email) {
+    const { opts, label } = predicateForArg(arg);
+    console.log(`GBIF credentials absent — skipping live download (see RUN_WHEN_READY.md).`);
+    console.log(`Target: ${label}\nPredicate that WOULD be submitted:\n`, JSON.stringify(buildDownloadPredicate(opts), null, 2));
+    process.exit(0);
+  }
+  const auth = "Basic " + Buffer.from(`${user}:${pass}`).toString("base64");
+
+  if (arg === "inbo") {
+    const keys = await inboDatasetKeys();
+    console.log(`\n=== GBIF batch ingest: INBO — ${keys.length} datasets (dataset-by-dataset) ===`);
+    let gInd = 0, gPts = 0, n = 0;
+    for (const k of keys) {
+      n++;
+      try {
+        const r = await ingestOne({ datasetKeys: [k] }, `[${n}/${keys.length}] ${k}`, auth, email, user);
+        gInd += r.individuals; gPts += r.points;
+      } catch (e) {
+        console.error(`  ✗ ${k} failed: ${(e as Error).message}`);
+      }
+      console.log(`  …running total: ${gInd} individuals · ${gPts} points`);
+    }
+    console.log(`\n✓ INBO complete: ${gInd} individuals · ${gPts} track points across ${keys.length} datasets.`);
+  } else {
+    const { opts, label } = predicateForArg(arg);
+    console.log(`\n=== GBIF batch ingest: ${label} ===`);
+    const r = await ingestOne(opts, label, auth, email, user);
+    console.log(`\n✓ Ingested ${r.individuals} individuals · ${r.points} track points.\n  download DOI: ${r.doi}`);
   }
   process.exit(0);
 }
