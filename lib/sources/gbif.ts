@@ -33,16 +33,29 @@ export interface GbifDataset {
   raw: unknown;
 }
 
-async function fetchJson(url: string, tries = 5): Promise<any> {
+async function fetchJson(url: string, tries = 6): Promise<any> {
   for (let attempt = 0; attempt < tries; attempt++) {
-    const res = await fetch(url, { headers: { "User-Agent": "migration-stories/0.1 (seed)" } });
-    if (res.status === 429 || res.status >= 500) {
-      const wait = Math.min(2000 * (attempt + 1), 8000);
-      await new Promise((r) => setTimeout(r, wait));
-      continue;
+    try {
+      // Node fetch has NO default timeout and reuses keep-alive sockets, so a
+      // stale socket hangs forever. Bound each request; a timeout aborts and we
+      // retry on a fresh connection.
+      const res = await fetch(url, {
+        headers: { "User-Agent": "migration-stories/0.1 (seed)", Connection: "close" },
+        signal: AbortSignal.timeout(8000),
+      });
+      if (res.status === 429 || res.status >= 500) {
+        await new Promise((r) => setTimeout(r, Math.min(2000 * (attempt + 1), 8000)));
+        continue;
+      }
+      if (!res.ok) throw new Error(`GBIF ${res.status} for ${url}`);
+      return await res.json();
+    } catch (err) {
+      // Timeout (AbortError/TimeoutError) or transient network error → backoff + retry
+      // on a fresh connection. `Connection: close` above discourages stale-socket reuse.
+      if (attempt === tries - 1) throw err;
+      process.stderr.write(`r`); // visible retry marker in logs
+      await new Promise((r) => setTimeout(r, Math.min(1000 * (attempt + 1), 4000)));
     }
-    if (!res.ok) throw new Error(`GBIF ${res.status} for ${url}`);
-    return res.json();
   }
   throw new Error(`GBIF: exhausted retries for ${url}`);
 }

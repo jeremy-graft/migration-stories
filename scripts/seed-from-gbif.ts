@@ -31,9 +31,14 @@ const COMMON_NAMES: Record<string, string> = {
   "Larus argentatus": "Herring gull",
 };
 
-const TOP_CANDIDATES = 3;     // how many individuals to fully pull + compare
-const PER_INDIVIDUAL_CAP = 30000;
-const MIN_POINTS = 200;
+// GBIF occurrence search degrades badly past ~10k offset (organismID queries
+// time out around offset 12k), and the no-auth path can't use the download API.
+// So we ingest only individuals whose ENTIRE track is pageable — yielding a
+// COMPLETE track fast. Richer individuals are reachable via Phase 3 (auth).
+const PAGEABLE_MAX = 8000;    // max total fixes we'll page without the download API
+const MIN_FIXES = 800;        // facet floor — ignore sparsely-tracked individuals
+const MAX_PULL = 6;           // how many pageable candidates to pull + compare
+const MIN_POINTS = 200;       // min clean points to qualify as a story
 const MIN_DAYS = 45;          // require a real seasonal span
 
 function commonNameFor(scientificName?: string): string | undefined {
@@ -79,16 +84,28 @@ async function main() {
   }
   console.log("✓ License is commercial-safe.\n");
 
-  // 3. Rank individuals, pull each candidate's full track, pick the most migratory.
-  const top = await gbifTopOrganisms(datasetKey, TOP_CANDIDATES);
-  console.log(`Top individuals by record count: ${top.map((t) => `${t.id}(${t.count})`).join(", ")}\n`);
+  // 3. Rank individuals; restrict to fully-pageable ones; pull each; pick most migratory.
+  const facet = await gbifTopOrganisms(datasetKey, 15);
+  console.log(`Individuals by fix count: ${facet.map((t) => `${t.id}(${t.count})`).join(", ")}`);
+  const candidates = facet
+    .filter((c) => c.count >= MIN_FIXES && c.count <= PAGEABLE_MAX)
+    .slice(0, MAX_PULL);
+  if (!candidates.length) {
+    console.error(`\n✗ No fully-pageable individual (${MIN_FIXES}–${PAGEABLE_MAX} fixes) in this dataset.`);
+    console.error("  Use the authenticated download API (Phase 3) for individuals with deeper tracks.");
+    process.exit(1);
+  }
+  console.log(`Pageable candidates (≤${PAGEABLE_MAX} fixes): ${candidates.map((c) => `${c.id}(${c.count})`).join(", ")}\n`);
 
   let best: { organismID: string; track: TrackResult; sample: GbifOccurrence[] } | null = null;
-  for (const cand of top) {
+  for (const cand of candidates) {
+    process.stdout.write(`  pulling ${cand.id} (${cand.count} fixes) `);
     const occ: GbifOccurrence[] = [];
-    for await (const o of gbifOccurrences(datasetKey, { organismID: cand.id, cap: PER_INDIVIDUAL_CAP })) {
+    for await (const o of gbifOccurrences(datasetKey, { organismID: cand.id, cap: PAGEABLE_MAX })) {
       occ.push(o);
+      if (occ.length % 3000 === 0) process.stdout.write(".");
     }
+    process.stdout.write(` ${occ.length} pulled\n`);
     const track = reconstructTrack(toRawPoints(occ));
     if (!track) { console.log(`  ${cand.id}: unusable (too few clean points)`); continue; }
     const ok = track.pointCount >= MIN_POINTS && track.durationDays >= MIN_DAYS;
