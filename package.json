@@ -12,6 +12,7 @@
     "db:migrate": "drizzle-kit migrate",
     "db:studio": "drizzle-kit studio",
     "seed-from-gbif": "tsx scripts/seed-from-gbif.ts",
+    "catalog-gbif": "tsx scripts/catalog-gbif.ts",
     "ingest-gbif-batch": "tsx scripts/ingest-gbif-batch.ts",
     "ingest-movebank-repo": "tsx scripts/ingest-movebank-repo.ts",
     "build-geojson": "tsx scripts/build-geojson.ts",

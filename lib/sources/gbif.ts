@@ -30,6 +30,7 @@ export interface GbifDataset {
   license?: string;
   citation?: string;
   publisher?: string;
+  publisherKey?: string;
   raw: unknown;
 }
 
@@ -70,8 +71,42 @@ export async function gbifDataset(datasetKey: string): Promise<GbifDataset> {
     license: d.license ?? undefined,
     citation: d.citation?.text ?? undefined,
     publisher: d.publishingOrganizationTitle ?? undefined,
+    publisherKey: d.publishingOrganizationKey ?? undefined,
     raw: d,
   };
+}
+
+// Publisher titles aren't on the dataset endpoint — only the org key. Resolve
+// (and cache) via the organization endpoint.
+const orgTitleCache = new Map<string, string | undefined>();
+export async function gbifOrganizationTitle(key?: string): Promise<string | undefined> {
+  if (!key) return undefined;
+  if (orgTitleCache.has(key)) return orgTitleCache.get(key);
+  try {
+    const o = await fetchJson(`${GBIF}/organization/${key}`);
+    const t = (o.title as string | undefined) ?? undefined;
+    orgTitleCache.set(key, t);
+    return t;
+  } catch {
+    orgTitleCache.set(key, undefined);
+    return undefined;
+  }
+}
+
+/**
+ * Generic occurrence-search facet. Returns `{name, count}` for the top
+ * `facetLimit` values of `field` under the given query filters. Used by the
+ * catalog to enumerate datasets (DATASET_KEY) and species (SPECIES_KEY).
+ */
+export async function gbifFacet(
+  query: Record<string, string>,
+  field: string,
+  facetLimit = 1500,
+): Promise<Array<{ name: string; count: number }>> {
+  const params = new URLSearchParams({ ...query, limit: "0", facet: field, facetLimit: String(facetLimit) });
+  const j = await fetchJson(`${GBIF}/occurrence/search?${params.toString()}`);
+  const f = (j.facets ?? [])[0];
+  return (f?.counts ?? []) as Array<{ name: string; count: number }>;
 }
 
 /** Rank individuals in a dataset by record count, via the ORGANISM_ID facet. */
