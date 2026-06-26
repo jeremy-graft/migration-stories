@@ -109,6 +109,23 @@ export async function gbifFacet(
   return (f?.counts ?? []) as Array<{ name: string; count: number }>;
 }
 
+// Resolve a GBIF speciesKey/taxonKey to its scientific name + taxonomic class
+// (Aves / Mammalia / Actinopterygii / …) for precise taxon classification. Cached.
+const speciesCache = new Map<string, { name?: string; class?: string }>();
+export async function gbifSpecies(key: string): Promise<{ name?: string; class?: string }> {
+  if (speciesCache.has(key)) return speciesCache.get(key)!;
+  try {
+    const s = await fetchJson(`${GBIF}/species/${key}`);
+    const v = { name: (s.species ?? s.scientificName) as string | undefined, class: s.class as string | undefined };
+    speciesCache.set(key, v);
+    return v;
+  } catch {
+    const v = {};
+    speciesCache.set(key, v);
+    return v;
+  }
+}
+
 /** Rank individuals in a dataset by record count, via the ORGANISM_ID facet. */
 export async function gbifTopOrganisms(
   datasetKey: string,

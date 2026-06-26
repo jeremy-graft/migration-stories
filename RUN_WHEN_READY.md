@@ -46,6 +46,11 @@ The license-acceptance handshake and CSV parser are implemented and unit-tested
 - ⚠️ Movebank direct-read doesn't reliably expose a machine-readable license.
   The script asserts CC0 for repository studies — **verify each study's license**
   before trusting it for commercial use.
+- **Pending list:** `pnpm catalog-movebank` already enumerated the 164 public
+  studies (109 GPS) into `MOVEBANK_PENDING.md`, but their `license_type` returns
+  HTTP 401 anonymously — so they are **NOT** in the commercial-safe `datasets`
+  index. With an account, read each study's `license_type` + taxa, gate to
+  CC0/CC-BY, then ingest. That's the only piece that needs Movebank creds.
 
 ## 3. MapTiler basemap — optional
 
