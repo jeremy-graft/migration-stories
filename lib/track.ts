@@ -62,6 +62,24 @@ function toClean(p: RawPoint): CleanPoint | null {
 }
 
 /**
+ * Thin a time-sorted point list to at most one fix per `minHours` window
+ * (greedy: keep the first, skip until ≥minHours later, keep the next…). A
+ * half-hourly GPS track becomes ~1–2 fixes/day — plenty to tell a migration
+ * story, ~10× lighter. `minHours <= 0` is a no-op.
+ */
+export function thinByInterval<T extends { ts: Date }>(points: T[], minHours: number): T[] {
+  if (minHours <= 0 || points.length === 0) return points;
+  const minMs = minHours * 3_600_000;
+  const out: T[] = [points[0]];
+  let lastKept = points[0].ts.getTime();
+  for (let i = 1; i < points.length; i++) {
+    const t = points[i].ts.getTime();
+    if (t - lastKept >= minMs) { out.push(points[i]); lastKept = t; }
+  }
+  return out;
+}
+
+/**
  * Reconstruct a single individual's track.
  * @param raw      raw points (any order)
  * @param maxSpeedKmh implausible-speed threshold for outlier flagging

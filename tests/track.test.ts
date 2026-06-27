@@ -1,6 +1,13 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { reconstructTrack, type RawPoint } from "../lib/track";
+import { reconstructTrack, thinByInterval, type RawPoint } from "../lib/track";
+
+test("thinByInterval keeps ~1 fix per window (48 hourly fixes → 4 at 12h)", () => {
+  const pts = Array.from({ length: 48 }, (_, i) => ({ ts: new Date(Date.UTC(2024, 0, 1, i)), lon: 0, lat: 0 }));
+  const thinned = thinByInterval(pts, 12);
+  assert.deepEqual(thinned.map((p) => p.ts.getUTCHours()), [0, 12, 0, 12]); // 0h,12h,24h,36h
+  assert.equal(thinByInterval(pts, 0).length, 48); // no-op
+});
 
 function northwardTrack(): RawPoint[] {
   const pts: RawPoint[] = [];

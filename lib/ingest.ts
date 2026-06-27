@@ -7,7 +7,11 @@ import { eq, inArray } from "drizzle-orm";
 import { db } from "../db/index";
 import { datasets, individuals, trackPoints, stories } from "../db/schema";
 import { isCommercialSafe, type License } from "./licenses";
-import { reconstructTrack, type RawPoint } from "./track";
+import { reconstructTrack, thinByInterval, type RawPoint } from "./track";
+
+// Story resolution: keep ~1 fix per 12h (≈1–2/day). Half-hourly GPS is overkill
+// for migration storytelling; thinning here lets us afford far more species.
+const THIN_HOURS = 12;
 
 export interface DatasetInput {
   id: string; // e.g. "gbif:<key>" or "movebank_repo:<studyId>"
@@ -43,7 +47,7 @@ export async function ingestTracks(
   inds: IndividualInput[],
   opts: { minPoints?: number } = {},
 ): Promise<IngestSummary> {
-  const minPoints = opts.minPoints ?? 50;
+  const minPoints = opts.minPoints ?? 20; // post-thinning floor (~20 days of daily fixes)
 
   // License gate — the single mandatory check before any write.
   if (!isCommercialSafe(ds.license)) {
@@ -70,8 +74,13 @@ export async function ingestTracks(
   });
 
   for (const ind of inds) {
-    const track = reconstructTrack(ind.points);
-    if (!track || track.pointCount < minPoints) { skipped++; continue; }
+    // Thin to story resolution (~1–2 fixes/day) — half-hourly GPS is overkill
+    // for migration storytelling and balloons storage. Reconstruct twice: once
+    // to clean/flag, then on the thinned set so metrics reflect what we store.
+    const base = reconstructTrack(ind.points);
+    if (!base) { skipped++; continue; }
+    const track = reconstructTrack(thinByInterval(base.points.filter((p) => p.visible), THIN_HOURS)) ?? base;
+    if (track.pointCount < minPoints) { skipped++; continue; }
     if (ind.scientificName) taxa.add(ind.scientificName);
 
     const [row] = await db.insert(individuals).values({

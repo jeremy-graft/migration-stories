@@ -17,6 +17,7 @@
     "ingest-gbif-batch": "tsx scripts/ingest-gbif-batch.ts",
     "ingest-movebank-repo": "tsx scripts/ingest-movebank-repo.ts",
     "build-geojson": "tsx scripts/build-geojson.ts",
+    "thin-existing": "tsx scripts/thin-existing.ts",
     "test": "node --import tsx --test tests/licenses.test.ts tests/track.test.ts tests/gbif-predicate.test.ts tests/movebank.test.ts"
   },
   "dependencies": {
