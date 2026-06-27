@@ -106,12 +106,14 @@ async function processDataset(key: string, records: number): Promise<CatalogEntr
 
     await db.insert(datasets).values({
       id: `gbif:${key}`, source: "gbif", title: meta.title, doi: meta.doi, license,
-      citation: meta.citation, publisher, taxa: species, recordCount: records, raw: meta.raw as object,
+      citation: meta.citation, publisher, taxa: species, telemetryType: telemetry, taxonGroup: taxon,
+      recordCount: records, raw: meta.raw as object,
     }).onConflictDoUpdate({
       target: datasets.id,
       set: {
         title: meta.title, doi: meta.doi, license, citation: meta.citation,
-        publisher, taxa: species, recordCount: records, raw: meta.raw as object,
+        publisher, taxa: species, telemetryType: telemetry, taxonGroup: taxon,
+        recordCount: records, raw: meta.raw as object,
       },
     });
 

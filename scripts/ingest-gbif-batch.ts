@@ -150,6 +150,43 @@ async function inboDatasetKeys(): Promise<string[]> {
   return (rows as Array<{ id: string }>).map((r) => r.id.replace(/^gbif:/, ""));
 }
 
+/**
+ * The next tranche of migration datasets to ingest: GPS bird/mammal/reptile
+ * datasets from the catalog that have NO track points yet, richest first.
+ */
+async function migrationDatasetKeys(limit: number): Promise<string[]> {
+  const { neon } = await import("@neondatabase/serverless");
+  const sql = neon(process.env.DATABASE_URL!);
+  // Exclude survey/observation/databank/eDNA datasets — they aren't GPS tracks
+  // even when a taxon class looks bird/mammal. Keeps tranches focused on journeys.
+  const rows = await sql`
+    select id from datasets
+    where telemetry_type in ('gps/argos', 'gps/other')
+      and taxon_group in ('bird', 'mammal', 'reptile')
+      and title !~* 'survey|databank|notebook|edna|monitoring|camera|soundscape|general observ|acoustic|detection|expedition|checklist|atlas|ringing|census'
+      and id not in (select distinct dataset_id from individuals)
+    order by record_count desc nulls last
+    limit ${limit}`;
+  return (rows as Array<{ id: string }>).map((r) => r.id.replace(/^gbif:/, ""));
+}
+
+/** Ingest a list of datasetKeys sequentially, tolerating per-dataset failures. */
+async function runBatch(keys: string[], label: string, auth: string, email: string, user: string) {
+  console.log(`\n=== GBIF batch ingest: ${label} — ${keys.length} datasets ===`);
+  let gInd = 0, gPts = 0, n = 0;
+  for (const k of keys) {
+    n++;
+    try {
+      const r = await ingestOne({ datasetKeys: [k] }, `[${n}/${keys.length}] ${k}`, auth, email, user);
+      gInd += r.individuals; gPts += r.points;
+    } catch (e) {
+      console.error(`  ✗ ${k} failed: ${(e as Error).message}`);
+    }
+    console.log(`  …running total: ${gInd} individuals · ${gPts} points`);
+  }
+  console.log(`\n✓ ${label} complete: ${gInd} individuals · ${gPts} track points across ${keys.length} datasets.`);
+}
+
 async function main() {
   const arg = process.argv[2] || "inbo";
   const user = process.env.GBIF_USER, pass = process.env.GBIF_PASS, email = process.env.GBIF_EMAIL;
@@ -163,20 +200,11 @@ async function main() {
   const auth = "Basic " + Buffer.from(`${user}:${pass}`).toString("base64");
 
   if (arg === "inbo") {
-    const keys = await inboDatasetKeys();
-    console.log(`\n=== GBIF batch ingest: INBO — ${keys.length} datasets (dataset-by-dataset) ===`);
-    let gInd = 0, gPts = 0, n = 0;
-    for (const k of keys) {
-      n++;
-      try {
-        const r = await ingestOne({ datasetKeys: [k] }, `[${n}/${keys.length}] ${k}`, auth, email, user);
-        gInd += r.individuals; gPts += r.points;
-      } catch (e) {
-        console.error(`  ✗ ${k} failed: ${(e as Error).message}`);
-      }
-      console.log(`  …running total: ${gInd} individuals · ${gPts} points`);
-    }
-    console.log(`\n✓ INBO complete: ${gInd} individuals · ${gPts} track points across ${keys.length} datasets.`);
+    await runBatch(await inboDatasetKeys(), "INBO", auth, email, user);
+  } else if (arg === "migration") {
+    const limit = Number(process.argv[3] || 20);
+    const keys = await migrationDatasetKeys(limit);
+    await runBatch(keys, `migration tranche (top ${limit} un-ingested GPS bird/mammal/reptile)`, auth, email, user);
   } else {
     const { opts, label } = predicateForArg(arg);
     console.log(`\n=== GBIF batch ingest: ${label} ===`);

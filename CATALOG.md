@@ -15,10 +15,10 @@ Taxon groups are derived from each dataset's dominant species' GBIF class.
 | | CC0 | CC-BY | Total |
 | --- | ---: | ---: | ---: |
 | Datasets | 434 | 518 | 952 |
-| Records | 13,188,765 | 21,350,092 | 34,538,857 |
+| Records | 13,188,765 | 21,350,169 | 34,538,934 |
 | Species (distinct) | 1,500+ | 1,500+ | — |
 
-- **952** dataset rows in the DB; **1** have track points ingested.
+- **952** dataset rows in the DB; **23** have track points ingested.
 - **🎯 Migration-relevant subset (GPS bird/mammal/reptile): 584 datasets · 14,173,655 records.** This is the story-candidate index.
 
 ## By telemetry type
@@ -27,7 +27,7 @@ Taxon groups are derived from each dataset's dominant species' GBIF class.
 | --- | ---: | ---: |
 | gps/argos | 584 | 14,173,655 |
 | acoustic | 117 | 9,540,432 |
-| gps/other | 196 | 8,745,555 |
+| gps/other | 196 | 8,745,632 |
 | imaging/camera | 55 | 2,079,215 |
 
 ## By taxon group (from GBIF species class)
@@ -38,7 +38,7 @@ Taxon groups are derived from each dataset's dominant species' GBIF class.
 | other/unknown | 186 | 8,864,475 |
 | fish/inverts | 110 | 7,655,961 |
 | mammal | 518 | 5,949,468 |
-| insect | 24 | 614,882 |
+| insect | 24 | 614,959 |
 | reptile | 12 | 27,794 |
 | amphibian | 12 | 12,413 |
 
@@ -115,7 +115,7 @@ Taxon groups are derived from each dataset's dominant species' GBIF class.
 | 391,979 | 8 | Observatoire Global du Saint-Laurent |
 | 370,100 | 17 | OBIS-SEAMAP |
 | 367,592 | 7 | National Museum of Nature and Science, Japan |
-| 360,640 | 7 | Finnish Biodiversity Information Facility |
+| 360,715 | 7 | Finnish Biodiversity Information Facility |
 | 309,917 | 1 | Australian Wildlife Conservancy |
 | 298,985 | 3 | NatureScot |
 | 274,177 | 8 | Australian Antarctic Data Centre |

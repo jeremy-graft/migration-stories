@@ -19,6 +19,8 @@ export const datasets = pgTable("datasets", {
   citation: text("citation"),
   publisher: text("publisher"),
   taxa: text("taxa").array(),               // scientific names present
+  telemetryType: text("telemetry_type"),    // gps/argos | acoustic | imaging/camera | gps/other
+  taxonGroup: text("taxon_group"),          // bird | mammal | fish/inverts | reptile | …
   bbox: doublePrecision("bbox").array(),    // [minLon,minLat,maxLon,maxLat]
   recordCount: integer("record_count"),
   ingestedAt: timestamp("ingested_at", { withTimezone: true }).defaultNow(),
