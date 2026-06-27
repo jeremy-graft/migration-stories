@@ -35,14 +35,29 @@ export interface TrackResult {
 const isFiniteNum = (n: unknown): n is number =>
   typeof n === "number" && Number.isFinite(n);
 
+/**
+ * Parse a timestamp, tolerating ISO 8601 intervals ("start/end") that many GBIF
+ * datasets use for eventDate — we key on the start instant.
+ */
+function parseTimestamp(ts: string | Date): Date | null {
+  if (ts instanceof Date) return ts;
+  let s = ts;
+  if (s.includes("/")) {
+    const [a, b] = s.split("/");
+    s = a || b; // prefer the start; fall back to end for "/end"
+  }
+  const d = new Date(s);
+  return Number.isNaN(d.getTime()) ? null : d;
+}
+
 /** Valid, non-null, non-(0,0) coordinate with a parseable timestamp. */
 function toClean(p: RawPoint): CleanPoint | null {
   if (!isFiniteNum(p.lon) || !isFiniteNum(p.lat)) return null;
   if (p.lon === 0 && p.lat === 0) return null; // classic null-island artifact
   if (Math.abs(p.lat) > 90 || Math.abs(p.lon) > 180) return null;
   if (!p.ts) return null;
-  const ts = p.ts instanceof Date ? p.ts : new Date(p.ts);
-  if (Number.isNaN(ts.getTime())) return null;
+  const ts = parseTimestamp(p.ts);
+  if (!ts || Number.isNaN(ts.getTime())) return null;
   return { ts, lon: p.lon, lat: p.lat, visible: true };
 }
 

@@ -24,6 +24,7 @@ export const datasets = pgTable("datasets", {
   bbox: doublePrecision("bbox").array(),    // [minLon,minLat,maxLon,maxLat]
   recordCount: integer("record_count"),
   ingestedAt: timestamp("ingested_at", { withTimezone: true }).defaultNow(),
+  ingestAttemptedAt: timestamp("ingest_attempted_at", { withTimezone: true }), // set after a download attempt (even if 0 tracks)
   raw: jsonb("raw"),                        // source metadata as-is
 });
 

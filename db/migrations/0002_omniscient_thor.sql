@@ -1,0 +1,1 @@
+ALTER TABLE "datasets" ADD COLUMN "ingest_attempted_at" timestamp with time zone;

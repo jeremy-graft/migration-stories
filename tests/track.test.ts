@@ -32,6 +32,17 @@ test("reconstructTrack drops null-island and invalid coords", () => {
   assert.equal(t!.pointCount, 10); // only the valid ones
 });
 
+test("reconstructTrack accepts ISO-interval eventDate (keys on the start)", () => {
+  const pts: RawPoint[] = [];
+  for (let i = 0; i < 5; i++) {
+    pts.push({ ts: `2024-03-0${i + 1}T00:00:00Z/2024-03-0${i + 2}T12:00:00Z`, lat: 40 + i, lon: 5 });
+  }
+  const t = reconstructTrack(pts);
+  assert.ok(t);
+  assert.equal(t!.pointCount, 5);
+  assert.equal(t!.trackStart.toISOString().slice(0, 10), "2024-03-01");
+});
+
 test("reconstructTrack flags a teleport outlier without poisoning the next fix", () => {
   const pts = northwardTrack();
   // Impossible 1-hour jump inserted between day 5 and day 6.

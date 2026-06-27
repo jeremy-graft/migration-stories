@@ -34,8 +34,24 @@ function predicateForArg(arg: string): { opts: DownloadPredicateOpts; label: str
   return { opts: { taxonKey: arg }, label: `taxonKey ${arg}` };
 }
 
+// Retry GBIF API calls through transient connect timeouts / 5xx (undici has a
+// 10s connect timeout and no retry by default; the long batches hit blips).
+async function fetchRetry(url: string, init: RequestInit, tries = 5): Promise<Response> {
+  for (let i = 0; i < tries; i++) {
+    try {
+      const res = await fetch(url, { ...init, signal: AbortSignal.timeout(30000) });
+      if (res.status >= 500) throw new Error(`HTTP ${res.status}`);
+      return res;
+    } catch (e) {
+      if (i === tries - 1) throw e;
+      await new Promise((r) => setTimeout(r, Math.min(2000 * (i + 1), 8000)));
+    }
+  }
+  throw new Error(`unreachable: ${url}`);
+}
+
 async function requestDownload(body: object, auth: string): Promise<string> {
-  const res = await fetch(`${GBIF}/occurrence/download/request`, {
+  const res = await fetchRetry(`${GBIF}/occurrence/download/request`, {
     method: "POST",
     headers: { Authorization: auth, "Content-Type": "application/json" },
     body: JSON.stringify(body),
@@ -47,7 +63,7 @@ async function requestDownload(body: object, auth: string): Promise<string> {
 async function pollDownload(key: string): Promise<{ doi?: string; url: string; total: number }> {
   for (let i = 0; i < 240; i++) {
     await new Promise((r) => setTimeout(r, 5000));
-    const meta = await (await fetch(`${GBIF}/occurrence/download/${key}`)).json();
+    const meta = await (await fetchRetry(`${GBIF}/occurrence/download/${key}`, {})).json();
     process.stdout.write(`  status: ${meta.status}${meta.totalRecords ? ` (${meta.totalRecords} records)` : ""}\n`);
     if (meta.status === "SUCCEEDED") return { doi: meta.doi, url: meta.downloadLink, total: meta.totalRecords ?? 0 };
     if (["KILLED", "FAILED", "CANCELLED"].includes(meta.status)) throw new Error(`download ${meta.status}`);
@@ -57,6 +73,25 @@ async function pollDownload(key: string): Promise<{ doi?: string; url: string; t
 
 /** Per-dataset, per-individual accumulator built by streaming occurrence.txt. */
 interface DatasetAccum { license: string; individuals: Map<string, { sci?: string; points: RawPoint[] }> }
+
+/**
+ * Resolve a tracked individual's id across fragmented source conventions:
+ * organismID (INBO/Movebank) → organismName (e.g. bobcats) → individualID →
+ * the pre-"deployment" prefix of occurrenceID (e.g. RAATD seals, gannets:
+ * "13440_88727:deployment:…", "90823974_deployment_4"). Returns "" if none.
+ */
+function pickIndividual(f: string[], col: Record<string, number>): string {
+  const direct =
+    (col.org >= 0 && f[col.org]) ||
+    (col.orgName >= 0 && f[col.orgName]) ||
+    (col.indId >= 0 && f[col.indId]);
+  if (direct) return direct;
+  if (col.occ >= 0 && f[col.occ]) {
+    const m = f[col.occ].match(/^(.+?)[_:]deployment[_:]/i);
+    if (m) return m[1];
+  }
+  return "";
+}
 
 async function parseArchive(zipPath: string): Promise<Map<string, DatasetAccum>> {
   const directory = await unzipper.Open.file(zipPath);
@@ -75,6 +110,7 @@ async function parseArchive(zipPath: string): Promise<Map<string, DatasetAccum>>
       const idx = (n: string) => header!.indexOf(n);
       col = {
         dataset: idx("datasetKey"), org: idx("organismID"),
+        orgName: idx("organismName"), indId: idx("individualID"), occ: idx("occurrenceID"),
         lat: idx("decimalLatitude"), lon: idx("decimalLongitude"),
         date: idx("eventDate"), lic: idx("license"),
         sci: idx("species") >= 0 ? idx("species") : idx("scientificName"),
@@ -85,7 +121,7 @@ async function parseArchive(zipPath: string): Promise<Map<string, DatasetAccum>>
     const f = line.split("\t");
     const license = normalizeLicense(col.lic >= 0 ? f[col.lic] : undefined);
     if (!isCommercialSafe(license)) continue;                 // per-row license gate
-    const orgId = col.org >= 0 ? f[col.org] : "";
+    const orgId = pickIndividual(f, col);
     if (!orgId) continue;                                     // need an individual id
     const datasetKey = col.dataset >= 0 ? f[col.dataset] : "unknown";
 
@@ -165,9 +201,17 @@ async function migrationDatasetKeys(limit: number): Promise<string[]> {
       and taxon_group in ('bird', 'mammal', 'reptile')
       and title !~* 'survey|databank|notebook|edna|monitoring|camera|soundscape|general observ|acoustic|detection|expedition|checklist|atlas|ringing|census'
       and id not in (select distinct dataset_id from individuals)
+      and ingest_attempted_at is null
     order by record_count desc nulls last
     limit ${limit}`;
   return (rows as Array<{ id: string }>).map((r) => r.id.replace(/^gbif:/, ""));
+}
+
+/** Mark a dataset as download-attempted so empty ones aren't re-fetched forever. */
+async function markAttempted(key: string) {
+  const { neon } = await import("@neondatabase/serverless");
+  const sql = neon(process.env.DATABASE_URL!);
+  await sql`update datasets set ingest_attempted_at = now() where id = ${`gbif:${key}`}`;
 }
 
 /** Ingest a list of datasetKeys sequentially, tolerating per-dataset failures. */
@@ -179,8 +223,9 @@ async function runBatch(keys: string[], label: string, auth: string, email: stri
     try {
       const r = await ingestOne({ datasetKeys: [k] }, `[${n}/${keys.length}] ${k}`, auth, email, user);
       gInd += r.individuals; gPts += r.points;
+      await markAttempted(k); // succeeded (even if 0 tracks) → don't re-fetch in future tranches
     } catch (e) {
-      console.error(`  ✗ ${k} failed: ${(e as Error).message}`);
+      console.error(`  ✗ ${k} failed: ${(e as Error).message}`); // transient → leave unmarked for retry
     }
     console.log(`  …running total: ${gInd} individuals · ${gPts} points`);
   }
