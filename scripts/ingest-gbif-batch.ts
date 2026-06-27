@@ -203,11 +203,13 @@ async function inboDatasetKeys(): Promise<string[]> {
  * The next tranche of migration datasets to ingest: GPS bird/mammal/reptile
  * datasets from the catalog that have NO track points yet, richest first.
  */
-async function migrationDatasets(limit: number): Promise<Array<{ key: string; records: number }>> {
+async function migrationDatasets(limit: number, newSpeciesOnly = false): Promise<Array<{ key: string; records: number }>> {
   const { neon } = await import("@neondatabase/serverless");
   const sql = neon(process.env.DATABASE_URL!);
   // Exclude survey/observation/databank/eDNA datasets — they aren't GPS tracks
   // even when a taxon class looks bird/mammal. Keeps tranches focused on journeys.
+  // newSpeciesOnly: keep only datasets that introduce a species we don't yet have
+  // (taxa NOT a subset of already-ingested species) — maximizes diversity per batch.
   const rows = await sql`
     select id, coalesce(record_count, 0)::int records from datasets
     where telemetry_type in ('gps/argos', 'gps/other')
@@ -215,6 +217,11 @@ async function migrationDatasets(limit: number): Promise<Array<{ key: string; re
       and title !~* 'survey|databank|notebook|edna|monitoring|camera|soundscape|general observ|acoustic|detection|expedition|checklist|atlas|ringing|census'
       and id not in (select distinct dataset_id from individuals)
       and ingest_attempted_at is null
+      and (${newSpeciesOnly} = false or (
+        array_length(taxa, 1) is not null
+        and not (taxa <@ (select coalesce(array_agg(distinct scientific_name), array[]::text[])
+                          from individuals where scientific_name is not null))
+      ))
     order by record_count desc nulls last
     limit ${limit}`;
   return (rows as Array<{ id: string; records: number }>).map((r) => ({ key: r.id.replace(/^gbif:/, ""), records: r.records }));
@@ -271,11 +278,13 @@ async function main() {
 
   if (arg === "inbo") {
     await runBatch(await inboDatasetKeys(), "INBO", auth, email, user);
-  } else if (arg === "migration") {
+  } else if (arg === "migration" || arg === "species") {
     const limit = Number(process.argv[3] || 60);
-    const items = await migrationDatasets(limit);
+    const newSpeciesOnly = arg === "species";
+    const items = await migrationDatasets(limit, newSpeciesOnly);
     const groups = chunkByRecords(items, 1_800_000, 15); // ≤1.8M recs / ≤15 datasets per GBIF job
-    console.log(`\n=== Batched migration ingest: ${items.length} datasets in ${groups.length} download job(s) ===`);
+    const label = newSpeciesOnly ? "Species-first ingest (new species only)" : "Batched migration ingest";
+    console.log(`\n=== ${label}: ${items.length} datasets in ${groups.length} download job(s) ===`);
     let gInd = 0, gPts = 0;
     for (let i = 0; i < groups.length; i++) {
       const keys = groups[i].map((g) => g.key);
@@ -289,7 +298,7 @@ async function main() {
       }
       console.log(`  …running total: ${gInd} individuals · ${gPts} points`);
     }
-    console.log(`\n✓ Batched migration complete: ${gInd} individuals · ${gPts} points across ${items.length} datasets.`);
+    console.log(`\n✓ ${label} complete: ${gInd} individuals · ${gPts} points across ${items.length} datasets.`);
   } else {
     const { opts, label } = predicateForArg(arg);
     console.log(`\n=== GBIF batch ingest: ${label} ===`);
