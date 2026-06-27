@@ -71,6 +71,21 @@ async function pollDownload(key: string): Promise<{ doi?: string; url: string; t
   throw new Error("download did not succeed within the polling window");
 }
 
+/** Download the (possibly large) DWCA zip to a file, retrying dropped connections. */
+async function downloadArchive(url: string, auth: string, zipPath: string, tries = 3): Promise<void> {
+  for (let i = 0; i < tries; i++) {
+    try {
+      const resp = await fetch(url, { headers: { Authorization: auth } });
+      if (!resp.ok || !resp.body) throw new Error(`archive download failed: ${resp.status}`);
+      await pipeline(Readable.fromWeb(resp.body as any), createWriteStream(zipPath));
+      return;
+    } catch (e) {
+      if (i === tries - 1) throw e;
+      await new Promise((r) => setTimeout(r, 4000 * (i + 1)));
+    }
+  }
+}
+
 /** Per-dataset, per-individual accumulator built by streaming occurrence.txt. */
 interface DatasetAccum { license: string; individuals: Map<string, { sci?: string; points: RawPoint[] }> }
 
@@ -148,9 +163,7 @@ async function ingestOne(opts: DownloadPredicateOpts, label: string, auth: strin
   const dir = mkdtempSync(join(tmpdir(), "gbif-"));
   const zipPath = join(dir, "dwca.zip");
   try {
-    const resp = await fetch(url, { headers: { Authorization: auth } });
-    if (!resp.ok || !resp.body) throw new Error(`archive download failed: ${resp.status}`);
-    await pipeline(Readable.fromWeb(resp.body as any), createWriteStream(zipPath));
+    await downloadArchive(url, auth, zipPath);
     const byDataset = await parseArchive(zipPath);
 
     let totalInd = 0, totalPts = 0;
@@ -190,13 +203,13 @@ async function inboDatasetKeys(): Promise<string[]> {
  * The next tranche of migration datasets to ingest: GPS bird/mammal/reptile
  * datasets from the catalog that have NO track points yet, richest first.
  */
-async function migrationDatasetKeys(limit: number): Promise<string[]> {
+async function migrationDatasets(limit: number): Promise<Array<{ key: string; records: number }>> {
   const { neon } = await import("@neondatabase/serverless");
   const sql = neon(process.env.DATABASE_URL!);
   // Exclude survey/observation/databank/eDNA datasets — they aren't GPS tracks
   // even when a taxon class looks bird/mammal. Keeps tranches focused on journeys.
   const rows = await sql`
-    select id from datasets
+    select id, coalesce(record_count, 0)::int records from datasets
     where telemetry_type in ('gps/argos', 'gps/other')
       and taxon_group in ('bird', 'mammal', 'reptile')
       and title !~* 'survey|databank|notebook|edna|monitoring|camera|soundscape|general observ|acoustic|detection|expedition|checklist|atlas|ringing|census'
@@ -204,7 +217,19 @@ async function migrationDatasetKeys(limit: number): Promise<string[]> {
       and ingest_attempted_at is null
     order by record_count desc nulls last
     limit ${limit}`;
-  return (rows as Array<{ id: string }>).map((r) => r.id.replace(/^gbif:/, ""));
+  return (rows as Array<{ id: string; records: number }>).map((r) => ({ key: r.id.replace(/^gbif:/, ""), records: r.records }));
+}
+
+/** Group datasets into download batches bounded by cumulative records + count. */
+function chunkByRecords<T extends { records: number }>(items: T[], maxRecords: number, maxCount: number): T[][] {
+  const groups: T[][] = [];
+  let cur: T[] = [], sum = 0;
+  for (const it of items) {
+    if (cur.length && (sum + it.records > maxRecords || cur.length >= maxCount)) { groups.push(cur); cur = []; sum = 0; }
+    cur.push(it); sum += it.records;
+  }
+  if (cur.length) groups.push(cur);
+  return groups;
 }
 
 /** Mark a dataset as download-attempted so empty ones aren't re-fetched forever. */
@@ -247,9 +272,24 @@ async function main() {
   if (arg === "inbo") {
     await runBatch(await inboDatasetKeys(), "INBO", auth, email, user);
   } else if (arg === "migration") {
-    const limit = Number(process.argv[3] || 20);
-    const keys = await migrationDatasetKeys(limit);
-    await runBatch(keys, `migration tranche (top ${limit} un-ingested GPS bird/mammal/reptile)`, auth, email, user);
+    const limit = Number(process.argv[3] || 60);
+    const items = await migrationDatasets(limit);
+    const groups = chunkByRecords(items, 1_800_000, 15); // ≤1.8M recs / ≤15 datasets per GBIF job
+    console.log(`\n=== Batched migration ingest: ${items.length} datasets in ${groups.length} download job(s) ===`);
+    let gInd = 0, gPts = 0;
+    for (let i = 0; i < groups.length; i++) {
+      const keys = groups[i].map((g) => g.key);
+      const recs = groups[i].reduce((s, g) => s + g.records, 0);
+      try {
+        const r = await ingestOne({ datasetKeys: keys }, `batch ${i + 1}/${groups.length} (${keys.length} datasets, ~${recs.toLocaleString()} recs)`, auth, email, user);
+        gInd += r.individuals; gPts += r.points;
+        for (const k of keys) await markAttempted(k);
+      } catch (e) {
+        console.error(`  ✗ batch ${i + 1} failed: ${(e as Error).message}`);
+      }
+      console.log(`  …running total: ${gInd} individuals · ${gPts} points`);
+    }
+    console.log(`\n✓ Batched migration complete: ${gInd} individuals · ${gPts} points across ${items.length} datasets.`);
   } else {
     const { opts, label } = predicateForArg(arg);
     console.log(`\n=== GBIF batch ingest: ${label} ===`);
