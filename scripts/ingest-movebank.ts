@@ -113,10 +113,11 @@ async function main() {
   const sql = neon(process.env.DATABASE_URL!);
   const have = new Set((await sql`select distinct scientific_name s from individuals where scientific_name is not null` as any).map((r: any) => r.s.toLowerCase()));
   const attempted = new Set((await sql`select id from datasets where source = 'movebank_repo' and ingest_attempted_at is not null` as any).map((r: any) => r.id));
+  const includeAll = process.argv[4] === "all"; // "all" = also deepen existing species (more animals)
   const picks = studies
     .filter((s) => !attempted.has(`movebank:${s.id}`))
     .map((s) => ({ s, newSp: s.taxa.filter((t) => !have.has(t.toLowerCase())).length }))
-    .filter((x) => x.newSp > 0)
+    .filter((x) => includeAll || x.newSp > 0)
     .sort((a, b) => b.newSp - a.newSp || a.s.locs - b.s.locs)
     .slice(0, limit);
 
