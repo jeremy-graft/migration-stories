@@ -57,13 +57,22 @@ function loadOpenGpsStudies(path: string): Study[] {
   return out;
 }
 
-/** Read a study's (reduced) events incl. per-record species, via the handshake. */
+/** Read a study's (reduced) events incl. per-record species, via the handshake.
+ *  Retries transient network failures (a flaky connection drops fetches). */
 async function readEvents(studyId: string) {
-  const csv = await movebankRead({
+  const params = {
     entity_type: "event", study_id: studyId,
     attributes: "timestamp,location_long,location_lat,individual_local_identifier,individual_taxon_canonical_name",
     event_reduction_profile: REDUCTION,
-  });
+  };
+  let csv = "";
+  for (let attempt = 0; ; attempt++) {
+    try { csv = await movebankRead(params); break; }
+    catch (e) {
+      if (attempt >= 3) throw e;
+      await new Promise((r) => setTimeout(r, 3000 * (attempt + 1)));
+    }
+  }
   const rows = parseCSV(csv);
   if (rows.length < 2) return new Map<string, { taxon?: string; points: RawPoint[] }>();
   const h = rows[0]; const ci = (n: string) => h.indexOf(n);
