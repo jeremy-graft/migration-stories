@@ -30,15 +30,18 @@ export async function movebankRead(
 ): Promise<string> {
   const headers = authHeader();
   const url = `${BASE}?${new URLSearchParams(params).toString()}`;
+  // Bound each request — Movebank reads can hang on a flaky connection, and a
+  // hung fetch (no default timeout) would stall/kill a long sequential harvest.
+  const timeout = () => AbortSignal.timeout(90000);
 
-  const res = await fetchImpl(url, { headers });
+  const res = await fetchImpl(url, { headers, signal: timeout() });
   const cookie = res.headers.get("set-cookie") ?? "";
   const body = await res.text();
 
   if (isLicenseTerms(body, res.headers)) {
     const md5 = crypto.createHash("md5").update(body).digest("hex");
     const acceptUrl = `${url}&license-md5=${md5}`;
-    const res2 = await fetchImpl(acceptUrl, { headers: { ...headers, Cookie: cookie } });
+    const res2 = await fetchImpl(acceptUrl, { headers: { ...headers, Cookie: cookie }, signal: timeout() });
     return res2.text();
   }
   return body;
