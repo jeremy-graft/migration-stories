@@ -22,3 +22,6 @@ next-env.d.ts
 # data artifacts (regenerable caches; keep out of git)
 /tmp
 /.cache
+
+# local embedded Postgres (PGlite) data dir
+/.pgdata

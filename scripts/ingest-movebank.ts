@@ -8,8 +8,7 @@
 // Usage: pnpm tsx scripts/ingest-movebank.ts <study-list.csv> [limit]
 import "dotenv/config";
 import { readFileSync } from "node:fs";
-import { neon } from "@neondatabase/serverless";
-import { db } from "../db/index";
+import { db, sql } from "../db/index";
 import { datasets } from "../db/schema";
 import { movebankRead } from "../lib/sources/movebank";
 import { ingestTracks, type IndividualInput } from "../lib/ingest";
@@ -110,7 +109,6 @@ async function main() {
   console.log(`Catalogued ${studies.length} open Movebank studies.\n`);
 
   // Select new-species-first, skipping already-attempted.
-  const sql = neon(process.env.DATABASE_URL!);
   const have = new Set((await sql`select distinct scientific_name s from individuals where scientific_name is not null` as any).map((r: any) => r.s.toLowerCase()));
   const attempted = new Set((await sql`select id from datasets where source = 'movebank_repo' and ingest_attempted_at is not null` as any).map((r: any) => r.id));
   const includeAll = process.argv[4] === "all"; // "all" = also deepen existing species (more animals)

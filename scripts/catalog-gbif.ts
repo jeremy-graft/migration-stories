@@ -16,8 +16,7 @@
 // Usage: pnpm catalog-gbif
 import "dotenv/config";
 import { writeFileSync } from "node:fs";
-import { neon } from "@neondatabase/serverless";
-import { db } from "../db/index";
+import { db, sql } from "../db/index";
 import { datasets } from "../db/schema";
 import { gbifFacet, gbifDataset, gbifOrganizationTitle, gbifSpecies } from "../lib/sources/gbif";
 import { normalizeLicense, isCommercialSafe, type License } from "../lib/licenses";
@@ -146,7 +145,6 @@ async function main() {
   console.log(`\n\nCatalogued ${entries.length} datasets (${items.length - entries.length} skipped).\n`);
 
   // 3. Report.
-  const sql = neon(process.env.DATABASE_URL!);
   const [{ n: totalDatasets }] = await sql`select count(*)::int n from datasets` as any;
   const [{ n: ingested }] = await sql`select count(distinct dataset_id)::int n from individuals` as any;
   const fmt = (n: number) => n.toLocaleString("en-US");

@@ -21,6 +21,7 @@ import readline from "node:readline";
 import unzipper from "unzipper";
 import { buildDownloadPredicate, buildDownloadRequest, type DownloadPredicateOpts } from "../lib/sources/gbif-download";
 import { gbifDataset } from "../lib/sources/gbif";
+import { sql } from "../db/index";
 import { normalizeLicense, isCommercialSafe } from "../lib/licenses";
 import { ingestTracks, type IndividualInput } from "../lib/ingest";
 import type { RawPoint } from "../lib/track";
@@ -193,8 +194,6 @@ async function ingestOne(opts: DownloadPredicateOpts, label: string, auth: strin
 
 /** INBO telemetry datasetKeys, read from our own catalog (the migration core). */
 async function inboDatasetKeys(): Promise<string[]> {
-  const { neon } = await import("@neondatabase/serverless");
-  const sql = neon(process.env.DATABASE_URL!);
   const rows = await sql`select id from datasets where publisher ilike ${"%INBO%"} order by record_count desc nulls last`;
   return (rows as Array<{ id: string }>).map((r) => r.id.replace(/^gbif:/, ""));
 }
@@ -204,8 +203,6 @@ async function inboDatasetKeys(): Promise<string[]> {
  * datasets from the catalog that have NO track points yet, richest first.
  */
 async function migrationDatasets(limit: number, newSpeciesOnly = false): Promise<Array<{ key: string; records: number }>> {
-  const { neon } = await import("@neondatabase/serverless");
-  const sql = neon(process.env.DATABASE_URL!);
   // Exclude survey/observation/databank/eDNA datasets — they aren't GPS tracks
   // even when a taxon class looks bird/mammal. Keeps tranches focused on journeys.
   // newSpeciesOnly: keep only datasets that introduce a species we don't yet have
@@ -241,8 +238,6 @@ function chunkByRecords<T extends { records: number }>(items: T[], maxRecords: n
 
 /** Mark a dataset as download-attempted so empty ones aren't re-fetched forever. */
 async function markAttempted(key: string) {
-  const { neon } = await import("@neondatabase/serverless");
-  const sql = neon(process.env.DATABASE_URL!);
   await sql`update datasets set ingest_attempted_at = now() where id = ${`gbif:${key}`}`;
 }
 

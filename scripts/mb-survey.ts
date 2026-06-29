@@ -5,7 +5,7 @@
 // Usage: pnpm tsx scripts/mb-survey.ts <path-to-csv>
 import "dotenv/config";
 import { readFileSync } from "node:fs";
-import { neon } from "@neondatabase/serverless";
+import { sql } from "../db/index";
 
 function parseCSV(text: string): string[][] {
   const rows: string[][] = [];
@@ -57,7 +57,6 @@ async function main() {
   console.log(`  → ~${sumInd.toLocaleString()} individuals, ~${sumLoc.toLocaleString()} location records (pre-thinning)`);
 
   // Species: taxon_ids is a comma-separated list of scientific names.
-  const sql = neon(process.env.DATABASE_URL!);
   const haveRows = await sql`select distinct scientific_name s from individuals where scientific_name is not null` as any;
   const have = new Set((haveRows as Array<{ s: string }>).map((r) => r.s.toLowerCase().trim()));
 

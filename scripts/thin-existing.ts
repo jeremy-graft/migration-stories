@@ -6,13 +6,11 @@
 //
 // Usage: pnpm thin-existing
 import "dotenv/config";
-import { neon } from "@neondatabase/serverless";
 import { eq } from "drizzle-orm";
-import { db } from "../db/index";
+import { db, sql } from "../db/index";
 import { individuals, stories } from "../db/schema";
 import { reconstructTrack, type RawPoint } from "../lib/track";
 
-const sql = neon(process.env.DATABASE_URL!);
 const BUCKET = 43200; // 12h in seconds — keep the first fix in each 12h window
 
 function downsample<T>(arr: T[], max: number): T[] {
