@@ -15,7 +15,7 @@ const THIN_HOURS = 12;
 
 export interface DatasetInput {
   id: string; // e.g. "gbif:<key>" or "movebank_repo:<studyId>"
-  source: "gbif" | "movebank_repo" | "movebank_direct";
+  source: "gbif" | "movebank_repo" | "movebank_direct" | "zenodo" | "ocearch";
   title: string;
   doi?: string;
   license: License;

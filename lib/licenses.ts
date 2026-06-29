@@ -8,13 +8,14 @@ export type License = "CC0_1_0" | "CC_BY_4_0" | "CC_BY_NC_4_0" | "OTHER";
 export function normalizeLicense(raw: string | null | undefined): License {
   if (!raw) return "OTHER";
   const s = raw.toLowerCase();
-  // Handles GBIF URLs, "CC0_1_0", and Movebank's "CC_0" / "CC_BY" forms.
-  if (s.includes("publicdomain/zero") || s.includes("cc0") || s.includes("cc_0") || s.includes("cc-0")) return "CC0_1_0";
+  // Handles GBIF URLs, "CC0_1_0", Movebank's "CC_0"/"CC_BY", and Zenodo's
+  // hyphenated "cc-zero" / "cc-by-4.0" / "cc-by-nc-4.0" forms.
+  if (s.includes("publicdomain/zero") || s.includes("cc0") || s.includes("cc_0") || s.includes("cc-0") || s.includes("cc-zero")) return "CC0_1_0";
   // Order matters: check NC before the generic BY.
   if (s.includes("by-nc")) return "CC_BY_NC_4_0";
   if (s.includes("licenses/by")) return "CC_BY_4_0";
   if (s.includes("cc_by_nc") || s.includes("cc by-nc")) return "CC_BY_NC_4_0";
-  if (s.includes("cc_by") || s.includes("cc by")) return "CC_BY_4_0";
+  if (s.includes("cc_by") || s.includes("cc by") || s.includes("cc-by")) return "CC_BY_4_0";
   return "OTHER";
 }
 

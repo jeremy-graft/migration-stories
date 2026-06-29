@@ -8,6 +8,10 @@ test("normalizeLicense maps source strings to the enum", () => {
   assert.equal(normalizeLicense("http://creativecommons.org/licenses/by-nc/4.0/"), "CC_BY_NC_4_0");
   assert.equal(normalizeLicense("CC_BY_4_0"), "CC_BY_4_0");
   assert.equal(normalizeLicense("CC_BY_NC_4_0"), "CC_BY_NC_4_0");
+  // Zenodo hyphenated forms
+  assert.equal(normalizeLicense("cc-zero"), "CC0_1_0");
+  assert.equal(normalizeLicense("cc-by-4.0"), "CC_BY_4_0");
+  assert.equal(normalizeLicense("cc-by-nc-4.0"), "CC_BY_NC_4_0");
   assert.equal(normalizeLicense("some proprietary terms"), "OTHER");
   assert.equal(normalizeLicense(undefined), "OTHER");
 });

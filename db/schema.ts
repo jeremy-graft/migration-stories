@@ -8,7 +8,7 @@ export const licenseEnum = pgEnum("license", [
   "CC0_1_0", "CC_BY_4_0", "CC_BY_NC_4_0", "OTHER",
 ]);
 
-export const sourceEnum = pgEnum("source", ["gbif", "movebank_repo", "movebank_direct"]);
+export const sourceEnum = pgEnum("source", ["gbif", "movebank_repo", "movebank_direct", "zenodo", "ocearch"]);
 
 export const datasets = pgTable("datasets", {
   id: text("id").primaryKey(),              // gbif datasetKey or movebank study id, prefixed by source
