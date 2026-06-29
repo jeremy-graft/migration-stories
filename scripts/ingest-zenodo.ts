@@ -6,13 +6,20 @@
 //
 // Usage: pnpm tsx scripts/ingest-zenodo.ts [limit] [pages]
 import "dotenv/config";
-import { sql } from "../db/index";
+import { readFileSync, writeFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import { ingestTracks, type IndividualInput } from "../lib/ingest";
 import { normalizeLicense, isCommercialSafe, type License } from "../lib/licenses";
 import type { RawPoint } from "../lib/track";
 
 const MAX_FILE_BYTES = 40 * 1024 * 1024; // skip files bigger than 40 MB for now
 const QUERY = "animal tracking telemetry GPS satellite Argos movement"; // space-separated = relevance match
+
+// Persist every Zenodo record id we attempt (yielded or not) so resumes skip
+// them cheaply — before any download — instead of re-scanning from page 1.
+const ATT_FILE = fileURLToPath(new URL("../zenodo-attempted.json", import.meta.url));
+const loadAttempted = (): Set<number> => { try { return new Set(JSON.parse(readFileSync(ATT_FILE, "utf8"))); } catch { return new Set(); } };
+const saveAttempted = (s: Set<number>) => { try { writeFileSync(ATT_FILE, JSON.stringify([...s])); } catch { /* ignore */ } };
 
 // ---- fuzzy CSV parsing -------------------------------------------------------
 function parseDelimited(text: string, delim: string): string[][] {
@@ -149,8 +156,8 @@ async function main() {
   const pages = Number(process.argv[3] || 5);
   console.log(`\n=== Zenodo ingest (limit ${limit}, up to ${pages} pages) ===\n`);
 
-  // already-attempted zenodo records (idempotent across runs)
-  const done = new Set((await sql`select id from datasets where source = 'zenodo'` as any).map((r: any) => r.id));
+  const attempted = loadAttempted();
+  console.log(`(${attempted.size} records already attempted in prior runs — skipping those)\n`);
 
   let ingested = 0, gInd = 0, gPts = 0; const newSpecies = new Set<string>();
   for (let page = 1; page <= pages && ingested < limit; page++) {
@@ -162,7 +169,8 @@ async function main() {
 
     for (const rec of hits) {
       if (ingested >= limit) break;
-      if (done.has(`zenodo:${rec.id}`)) continue;
+      if (attempted.has(rec.id)) continue; // skip before any download
+      attempted.add(rec.id);
       try {
         const r = await ingestRecord(rec);
         if (r) {
@@ -170,10 +178,12 @@ async function main() {
           console.log(`  ✓ ${(rec.metadata?.title || "").slice(0, 50)} → +${r.individuals} ind, +${r.points} pts ${r.species ? `[${r.species}]` : ""}`);
         }
       } catch (e) { /* skip */ }
+      if (attempted.size % 25 === 0) saveAttempted(attempted);
       await new Promise((res) => setTimeout(res, 400)); // be polite to Zenodo
     }
   }
-  console.log(`\n✓ Zenodo: ${ingested} datasets ingested · +${gInd} individuals · +${gPts} points · ${newSpecies.size} species seen`);
+  saveAttempted(attempted);
+  console.log(`\n✓ Zenodo: ${ingested} datasets ingested this run · +${gInd} individuals · +${gPts} points · ${newSpecies.size} species seen`);
   process.exit(0);
 }
 

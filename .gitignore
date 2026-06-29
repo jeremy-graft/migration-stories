@@ -25,3 +25,6 @@ next-env.d.ts
 
 # local embedded Postgres (PGlite) data dir
 /.pgdata
+
+# zenodo harvest resume state
+/zenodo-attempted.json
