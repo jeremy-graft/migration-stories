@@ -13,7 +13,19 @@ import { normalizeLicense, isCommercialSafe, type License } from "../lib/license
 import type { RawPoint } from "../lib/track";
 
 const MAX_FILE_BYTES = 40 * 1024 * 1024; // skip files bigger than 40 MB for now
-const QUERY = "animal tracking telemetry GPS satellite Argos movement"; // space-separated = relevance match
+// Many relevance-ranked queries cover far more of Zenodo's ~18k tracking
+// datasets than one query's deep (low-relevance) pages. Attempted-set dedupes.
+const QUERIES = [
+  "animal tracking telemetry GPS", "bird GPS tracking movement",
+  "seabird satellite tracking foraging", "sea turtle satellite tracking",
+  "shark ray satellite tag tracking", "mammal GPS collar movement",
+  "Argos satellite telemetry animal", "raptor eagle migration tracking GPS",
+  "waterbird waterfowl tracking GPS", "ungulate deer elk GPS collar movement",
+  "marine mammal seal whale tracking", "penguin tracking foraging trip",
+  "bat tracking movement telemetry", "reptile lizard snake tracking movement",
+  "songbird passerine geolocator migration", "stork crane goose tracking migration",
+  "carnivore wolf fox GPS tracking", "primate movement GPS tracking",
+];
 
 // Persist every Zenodo record id we attempt (yielded or not) so resumes skip
 // them cheaply — before any download — instead of re-scanning from page 1.
@@ -152,38 +164,41 @@ function trackiness(name: string): number {
 }
 
 async function main() {
-  const limit = Number(process.argv[2] || 30);
-  const pages = Number(process.argv[3] || 5);
-  console.log(`\n=== Zenodo ingest (limit ${limit}, up to ${pages} pages) ===\n`);
-
+  const limit = Number(process.argv[2] || 500);          // max NEW datasets to ingest this run
+  const pagesPerQuery = Number(process.argv[3] || 20);
   const attempted = loadAttempted();
-  console.log(`(${attempted.size} records already attempted in prior runs — skipping those)\n`);
+  console.log(`=== Zenodo harvest (limit ${limit}, ${QUERIES.length} queries × ≤${pagesPerQuery} pages) ===`);
+  console.log(`(${attempted.size} records already attempted — skipping)\n`);
 
   let ingested = 0, gInd = 0, gPts = 0; const newSpecies = new Set<string>();
-  for (let page = 1; page <= pages && ingested < limit; page++) {
-    const q = `https://zenodo.org/api/records?q=${encodeURIComponent(QUERY)}&type=dataset&size=25&page=${page}`;
-    let data: any;
-    try { data = await fetchJson(q); } catch (e) { console.error(`  page ${page} failed: ${(e as Error).message}`); continue; }
-    const hits: ZRecord[] = data.hits?.hits ?? [];
-    if (!hits.length) break;
-
-    for (const rec of hits) {
-      if (ingested >= limit) break;
-      if (attempted.has(rec.id)) continue; // skip before any download
-      attempted.add(rec.id);
-      try {
-        const r = await ingestRecord(rec);
-        if (r) {
-          ingested++; gInd += r.individuals; gPts += r.points; if (r.species) newSpecies.add(r.species);
-          console.log(`  ✓ ${(rec.metadata?.title || "").slice(0, 50)} → +${r.individuals} ind, +${r.points} pts ${r.species ? `[${r.species}]` : ""}`);
-        }
-      } catch (e) { /* skip */ }
-      if (attempted.size % 25 === 0) saveAttempted(attempted);
-      await new Promise((res) => setTimeout(res, 400)); // be polite to Zenodo
+  outer:
+  for (const QUERY of QUERIES) {
+    console.log(`\n— query: "${QUERY}"`);
+    for (let page = 1; page <= pagesPerQuery; page++) {
+      if (ingested >= limit) break outer;
+      const q = `https://zenodo.org/api/records?q=${encodeURIComponent(QUERY)}&type=dataset&size=25&page=${page}`;
+      let data: any;
+      try { data = await fetchJson(q); } catch (e) { console.error(`  page ${page} failed: ${(e as Error).message}`); continue; }
+      const hits: ZRecord[] = data.hits?.hits ?? [];
+      if (!hits.length) break;
+      for (const rec of hits) {
+        if (ingested >= limit) break outer;
+        if (attempted.has(rec.id)) continue; // skip before any download
+        attempted.add(rec.id);
+        try {
+          const r = await ingestRecord(rec);
+          if (r) {
+            ingested++; gInd += r.individuals; gPts += r.points; if (r.species) newSpecies.add(r.species);
+            console.log(`  ✓ ${(rec.metadata?.title || "").slice(0, 46)} → +${r.individuals} ind, +${r.points} pts ${r.species ? `[${r.species}]` : ""}`);
+          }
+        } catch (e) { /* skip */ }
+        if (attempted.size % 25 === 0) saveAttempted(attempted);
+        await new Promise((res) => setTimeout(res, 200));
+      }
     }
   }
   saveAttempted(attempted);
-  console.log(`\n✓ Zenodo: ${ingested} datasets ingested this run · +${gInd} individuals · +${gPts} points · ${newSpecies.size} species seen`);
+  console.log(`\n✓ Zenodo run: ${ingested} datasets · +${gInd} individuals · +${gPts} points · ${newSpecies.size} species this run`);
   process.exit(0);
 }
 
