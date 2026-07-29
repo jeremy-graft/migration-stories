@@ -45,8 +45,12 @@ a {
 /* links overlaid on the hero (top-right, below the readout): the live featured
    journey + the catalog. Matches the hero's mono/instrument styling. */
 .heroNav {
-  position: fixed;
-  top: clamp(9rem, 22vh, 12rem);
+  /* Absolute against `.hero` (the component portals itself in there), not fixed:
+     a fixed element followed the reader down the page and sat over the findings.
+     Anchored BELOW the readout, which is ~11rem tall at its longest, so the two
+     never collide, and it scrolls away with the hero it belongs to. */
+  position: absolute;
+  top: clamp(12rem, 27vh, 15rem);
   right: clamp(1.1rem, 4vw, 2.5rem);
   z-index: 5;
   display: flex;
@@ -76,10 +80,21 @@ a {
   border-color: var(--cold);
 }
 @media (max-width: 640px) {
+  /* On a phone the hero is full: heading, ribbon, 10 pickers and the stats row
+     leave no free space, so a floating pill inevitably covered something (it was
+     sitting on the stats). Drop into normal flow instead: the links land just
+     under the hero, which reads as a natural next step rather than an overlay. */
   .heroNav {
-    top: auto;
-    bottom: 1rem;
-    right: 1rem;
+    position: static;
+    align-items: stretch;
+    /* last flex child of `.hero`, so it lands at the foot of the hero */
+    padding: 1.1rem clamp(1.1rem, 4vw, 2.5rem) 1.2rem;
+    margin-top: 1.1rem;
+    border-top: 1px solid var(--rule);
+  }
+  .journeyLink {
+    text-align: center;
+    background: transparent;
   }
 }
 

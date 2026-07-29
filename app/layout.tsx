@@ -2,10 +2,29 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import "./globals.css";
 
+const DESC =
+  "A dot-matrix Earth that breathes through the seasons, traced by real animal migrations, built from open, openly-licensed tracking data.";
+
 export const metadata: Metadata = {
+  // Absolute base so the social card resolves when the page is scraped.
+  metadataBase: new URL("https://whereanimalsgo.com"),
   title: "Where Animals Go",
-  description:
-    "A dot-matrix Earth that breathes through the seasons, traced by real animal migrations, built from open, openly-licensed tracking data.",
+  description: DESC,
+  icons: { icon: "/icon.svg" },
+  openGraph: {
+    type: "website",
+    siteName: "Where Animals Go",
+    title: "Where Animals Go",
+    description: DESC,
+    url: "/",
+    images: [{ url: "/og.png", width: 1200, height: 630, alt: "A dark dot-matrix world map crossed by glowing animal migration tracks" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Where Animals Go",
+    description: DESC,
+    images: ["/og.png"],
+  },
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
