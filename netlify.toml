@@ -1,0 +1,9 @@
+# Static-export deploy. `next build` writes the site to `out/`; Netlify serves it
+# as plain files (no Next server runtime needed). Works with Git-connected deploys
+# or a manual drag-drop of the `out/` folder.
+[build]
+  command = "npm run build"
+  publish = "out"
+
+[build.environment]
+  NODE_VERSION = "20"

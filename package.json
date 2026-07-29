@@ -18,6 +18,10 @@
     "ingest-movebank-repo": "tsx scripts/ingest-movebank-repo.ts",
     "build-geojson": "tsx scripts/build-geojson.ts",
     "thin-existing": "tsx scripts/thin-existing.ts",
+    "export-web": "tsx scripts/export-web.ts",
+    "build-landing": "tsx scripts/build-landing.ts",
+    "gen-hero": "tsx scripts/gen-hero-component.ts",
+    "build-hero": "tsx scripts/export-web.ts && tsx scripts/build-landing.ts && tsx scripts/gen-hero-component.ts",
     "test": "node --import tsx --test tests/licenses.test.ts tests/track.test.ts tests/gbif-predicate.test.ts tests/movebank.test.ts"
   },
   "dependencies": {

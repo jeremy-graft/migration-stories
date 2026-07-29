@@ -1,0 +1,84 @@
+/* Shared palette + base for pages that aren't the hero. The landing hero injects
+   its own (identical) stylesheet; these variables make journey pages match. */
+:root {
+  --void: #03090c;
+  --deep: #06141a;
+  --panel: #091e25;
+  --rule: #123039;
+  --land: #12343e;
+  --cold: #58d2e6;
+  --warm: #ffb24d;
+  --text: #d8e8eb;
+  --muted: #6e8c94;
+  --display: ui-serif, "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+  --body: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+* {
+  box-sizing: border-box;
+}
+html {
+  scroll-behavior: smooth;
+}
+body {
+  margin: 0;
+  background: var(--void);
+  color: var(--text);
+  font-family: var(--body);
+  font-size: 17px;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+}
+a {
+  color: var(--cold);
+}
+:focus-visible {
+  outline: 2px solid var(--warm);
+  outline-offset: 3px;
+}
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+/* links overlaid on the hero (top-right, below the readout): the live featured
+   journey + the catalog. Matches the hero's mono/instrument styling. */
+.heroNav {
+  position: fixed;
+  top: clamp(9rem, 22vh, 12rem);
+  right: clamp(1.1rem, 4vw, 2.5rem);
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.5rem;
+}
+.journeyLink {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--cold);
+  text-decoration: none;
+  border: 1px solid var(--rule);
+  padding: 0.55rem 0.9rem;
+  background: rgba(3, 9, 12, 0.55);
+  backdrop-filter: blur(4px);
+  transition: background 0.2s, border-color 0.2s, color 0.2s;
+}
+.journeyLink--quiet {
+  color: var(--muted);
+}
+.journeyLink:hover {
+  background: var(--cold);
+  color: var(--void);
+  border-color: var(--cold);
+}
+@media (max-width: 640px) {
+  .heroNav {
+    top: auto;
+    bottom: 1rem;
+    right: 1rem;
+  }
+}

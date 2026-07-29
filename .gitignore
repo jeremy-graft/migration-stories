@@ -28,3 +28,36 @@ next-env.d.ts
 
 # zenodo harvest resume state
 /zenodo-attempted.json
+
+# dryad harvest resume state
+/dryad-attempted.json
+
+# cached movebank study list
+/movebank-studies.csv
+
+# atn harvest resume state
+/atn-attempted.json
+
+# usgs / sciencebase harvest resume state
+/sciencebase-attempted.json
+
+# pangaea harvest resume state
+/pangaea-attempted.json
+
+# story track exports
+/exports/
+
+# cached elevation grid
+/etopo-0.25deg.bin
+
+# rescued corpus CSVs (large, regenerable)
+/rescue/
+
+# cached temperature climatology grid
+/temp-5deg.json
+
+# corpus backup archives
+/rescue-backup-*.tar.gz
+
+# obsolete manual drag-drop deploy folder (superseded by `next build` -> /out)
+/site/
