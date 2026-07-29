@@ -3,6 +3,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { allJourneys, journeyBySlug, displayName, type JourneyMeta } from "@/lib/journeys";
 import Journey from "@/components/Journey";
+import Provenance from "@/components/Provenance";
+import SiteFooter from "@/components/SiteFooter";
 
 // Prerender one static page per species in the catalog.
 export function generateStaticParams() {
@@ -51,7 +53,7 @@ export default async function JourneyPage({ params }: { params: Promise<{ slug: 
 
   return (
     <main style={{ maxWidth: "64rem", margin: "0 auto", padding: "clamp(1.5rem,4vw,3rem)" }}>
-      <Link href="/" style={{ fontFamily: "var(--mono)", fontSize: ".72rem", letterSpacing: ".14em", textTransform: "uppercase", color: "var(--muted)", textDecoration: "none" }}>
+      <Link href="/" className="backLink">
         &larr; Where animals go
       </Link>
 
@@ -76,6 +78,8 @@ export default async function JourneyPage({ params }: { params: Promise<{ slug: 
         {j.band != null ? <Stat v={j.band + "°C"} k="temperature range" /> : null}
       </div>
 
+      <Provenance attrib={j.attrib} />
+
       <nav style={{ borderTop: "1px solid var(--rule)", marginTop: "2.5rem", paddingTop: "1.3rem" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: "1rem", margin: "0 0 .8rem" }}>
           <p style={{ fontFamily: "var(--mono)", fontSize: ".66rem", letterSpacing: ".18em", textTransform: "uppercase", color: "var(--muted)", margin: 0 }}>
@@ -96,6 +100,8 @@ export default async function JourneyPage({ params }: { params: Promise<{ slug: 
           ))}
         </ul>
       </nav>
+
+      <SiteFooter />
     </main>
   );
 }

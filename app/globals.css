@@ -82,3 +82,90 @@ a {
     right: 1rem;
   }
 }
+
+/* ---------- provenance ----------
+   Credit is a CC BY obligation, not a courtesy, and showing the source is also
+   how this project earns trust. Styled as part of the instrument, not fine print. */
+.prov {
+  margin-top: 1.4rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--rule);
+  font-size: 0.88rem;
+  line-height: 1.55;
+}
+.prov dl {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.15rem 1rem;
+  margin: 0.6rem 0 0;
+}
+.prov dt {
+  font-family: var(--mono);
+  font-size: 0.66rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding-top: 0.25rem;
+}
+.prov dd {
+  margin: 0;
+  min-width: 0;
+  overflow-wrap: break-word;
+}
+.prov .cite {
+  margin: 0.8rem 0 0;
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+.licBadge {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: 0.66rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  border: 1px solid currentColor;
+  padding: 0.1rem 0.45rem;
+  text-decoration: none;
+}
+.licBadge--open {
+  color: var(--cold);
+}
+.licBadge--nc {
+  color: var(--warm);
+}
+
+/* ---------- shared page chrome ---------- */
+.siteFooter {
+  border-top: 1px solid var(--rule);
+  margin-top: 3.5rem;
+  padding: 1.6rem 0 3rem;
+  color: var(--muted);
+  font-size: 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+.siteFooter a {
+  color: var(--muted);
+}
+.siteFooter a:hover {
+  color: var(--cold);
+}
+.footLabel {
+  font-family: var(--mono);
+  font-size: 0.66rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.backLink {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+  text-decoration: none;
+}
+.backLink:hover {
+  color: var(--cold);
+}

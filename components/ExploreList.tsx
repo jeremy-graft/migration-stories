@@ -12,6 +12,7 @@ interface Row {
   km: number;
   days: number;
   fixes: number;
+  license: string;
 }
 const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 const label = (r: Row) => r.common || r.sci;

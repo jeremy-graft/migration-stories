@@ -14,9 +14,18 @@ export interface JourneyMeta {
   days: number;
   fixes: number;
   band: number | null;
+  license: string; // CC0_1_0 | CC_BY_4_0 | CC_BY_NC_4_0 | OTHER
 }
 export interface JourneyDetail extends JourneyMeta {
   note: string;
+  attrib: {
+    source: string;
+    title: string;
+    doi: string | null;
+    license: string;
+    citation: string | null;
+    publisher: string | null;
+  } | null;
   cam: { lon: number; lat: number; lonSpan: number; latSpan: number };
   start: number;
   end: number;

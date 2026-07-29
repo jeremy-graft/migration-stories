@@ -11,6 +11,7 @@ import { fileURLToPath } from "node:url";
 import { existsSync } from "node:fs";
 import { BAD_SPECIES, BAD_INDIVIDUALS, NON_SPECIES, SYNONYM_DUPLICATES } from "../lib/bad-species";
 import { slugify } from "../lib/earth-math";
+import { normalizeLicense } from "../lib/licenses";
 
 const R = (p: string) => fileURLToPath(new URL(`../${p}`, import.meta.url));
 const temp: (number | null)[][] = JSON.parse(readFileSync(R("temp-5deg.json"), "utf8"));
@@ -42,11 +43,11 @@ const CURATED: Record<string, string> = {
 
 async function main() {
   // ---- best eligible individual per species ----
-  interface Best { id: string; sci: string; km: number; days: number; n: number; latLo: number; latHi: number }
+  interface Best { id: string; ds: string; sci: string; km: number; days: number; n: number; latLo: number; latHi: number }
   const best = new Map<string, Best>();
   const clean = readFileSync(R("rescue/individuals_clean.csv"), "utf8").split("\n").filter(Boolean);
   const H = clean[0].split(",");
-  const iId = 0, iSci = H.indexOf("scientific_name"), iElig = H.indexOf("eligible"),
+  const iId = 0, iDs = H.indexOf("dataset_id"), iSci = H.indexOf("scientific_name"), iElig = H.indexOf("eligible"),
         iKm = H.indexOf("distance_km"), iDays = H.indexOf("days_span"), iN = H.indexOf("n_points"),
         iP1 = H.indexOf("lat_p1"), iP99 = H.indexOf("lat_p99");
   for (let i = 1; i < clean.length; i++) {
@@ -57,7 +58,26 @@ async function main() {
     const km = +c[iKm];
     const cur = best.get(sci);
     if (!cur || km > cur.km)
-      best.set(sci, { id: c[iId], sci, km, days: +c[iDays], n: +c[iN], latLo: +c[iP1], latHi: +c[iP99] });
+      best.set(sci, { id: c[iId], ds: c[iDs], sci, km, days: +c[iDays], n: +c[iN], latLo: +c[iP1], latHi: +c[iP99] });
+  }
+
+  // ---- attribution per dataset. CC BY REQUIRES credit in the UI, so every
+  //      journey carries its source, publisher, DOI and license. ----
+  interface Attrib { source: string; title: string; doi: string | null; license: string; citation: string | null; publisher: string | null }
+  const dsRows = readFileSync(R("rescue/datasets.csv"), "utf8").split("\n").filter(Boolean);
+  const HD = splitCsv(dsRows[0]);
+  const kId = HD.indexOf("id"), kSrc = HD.indexOf("source"), kTitle = HD.indexOf("title"),
+        kDoi = HD.indexOf("doi"), kLic = HD.indexOf("license"), kCite = HD.indexOf("citation"),
+        kPub = HD.indexOf("publisher");
+  const dsMap = new Map<string, Attrib>();
+  for (let i = 1; i < dsRows.length; i++) {
+    const c = splitCsv(dsRows[i]);
+    if (!c[kId]) continue;
+    dsMap.set(c[kId], {
+      source: c[kSrc] || "", title: (c[kTitle] || "").trim(), doi: (c[kDoi] || "").trim() || null,
+      license: normalizeLicense(c[kLic]), citation: (c[kCite] || "").trim() || null,
+      publisher: (c[kPub] || "").trim() || null,
+    });
   }
   const idToSci = new Map([...best.values()].map((b) => [b.id, b.sci]));
   const outliers = new Set<number>(JSON.parse(readFileSync(R("rescue/outliers.json"), "utf8")));
@@ -82,6 +102,8 @@ async function main() {
   const TARGET = 400;
   const manifest: any[] = [];
   let written = 0, named = 0;
+  const licCount: Record<string, number> = {};
+  const missingAttrib: string[] = [];
 
   for (const b of best.values()) {
     const P = (raw.get(b.id) ?? []).sort((a, z) => a.t - z.t);
@@ -109,13 +131,16 @@ async function main() {
     if (common) named++;
     const km = Math.round(b.km), days = Math.round(b.days);
     const note = CURATED[b.sci] || `${n(km)} km tracked over ${n(days)} days`;
+    const attrib = dsMap.get(b.ds) ?? null;
+    if (attrib) licCount[attrib.license] = (licCount[attrib.license] || 0) + 1;
+    else missingAttrib.push(b.sci);
 
     writeFileSync(R(`public/data/journey/${slug}.json`), JSON.stringify({
-      slug, sci: b.sci, common, group, note, km, days, fixes: P.length, band,
+      slug, sci: b.sci, common, group, note, km, days, fixes: P.length, band, attrib,
       cam: { lon: +lonC.toFixed(1), lat: +latC.toFixed(1), lonSpan: Math.round(lonSpan), latSpan: Math.round(latSpan) },
       start: Math.round(P[0].t / 86400000), end: Math.round(P[P.length - 1].t / 86400000), pts,
     }));
-    manifest.push({ slug, sci: b.sci, common, group, km, days, fixes: P.length, band });
+    manifest.push({ slug, sci: b.sci, common, group, km, days, fixes: P.length, band, license: attrib?.license ?? "OTHER" });
     written++;
   }
 
@@ -123,5 +148,7 @@ async function main() {
   writeFileSync(R("public/data/journeys.json"), JSON.stringify(manifest));
   console.log(`✓ ${written} journeys written (${named} with a common name)`);
   console.log(`✓ public/data/journeys.json (${(JSON.stringify(manifest).length / 1024).toFixed(0)} KB)`);
+  console.log(`  licenses: ${Object.entries(licCount).map(([k, v]) => `${k}=${v}`).join("  ")}`);
+  if (missingAttrib.length) console.log(`  ⚠ ${missingAttrib.length} without attribution: ${missingAttrib.slice(0, 5).join(", ")}`);
 }
 main().catch((e) => { console.error(e); process.exit(1); });

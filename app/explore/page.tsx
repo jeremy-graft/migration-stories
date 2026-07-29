@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { allJourneys } from "@/lib/journeys";
 import ExploreList from "@/components/ExploreList";
+import SiteFooter from "@/components/SiteFooter";
 
 export const metadata: Metadata = {
   title: "Explore every species · Where Animals Go",
@@ -13,7 +14,7 @@ export default function ExplorePage() {
   const journeys = allJourneys();
   return (
     <main style={{ maxWidth: "72rem", margin: "0 auto", padding: "clamp(1.5rem,4vw,3rem)" }}>
-      <Link href="/" style={{ fontFamily: "var(--mono)", fontSize: ".72rem", letterSpacing: ".14em", textTransform: "uppercase", color: "var(--muted)", textDecoration: "none" }}>
+      <Link href="/" className="backLink">
         &larr; Where animals go
       </Link>
 
@@ -31,6 +32,7 @@ export default function ExplorePage() {
       </header>
 
       <ExploreList journeys={journeys} />
+      <SiteFooter />
     </main>
   );
 }
