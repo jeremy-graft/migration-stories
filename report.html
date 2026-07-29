@@ -1,0 +1,260 @@
+<title>What We Know About Where Animals Go</title>
+<style>
+  :root{
+    --bg:#EEF2F3; --surface:#FAFCFC; --text:#0E2026; --muted:#5A737B; --rule:#CBD8DB;
+    --cold:#2E7F8C; --warm:#B4601A; --unwatched:#A99C90; --shadow:rgba(14,32,38,.07);
+    --display:ui-serif,"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+    --body:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{ --bg:#061216; --surface:#0B1D23; --text:#DCE8EA; --muted:#7E979E; --rule:#173139;
+           --cold:#4FB6C6; --warm:#E39445; --unwatched:#5C544C; --shadow:rgba(0,0,0,.4); }
+  }
+  :root[data-theme="dark"]{
+    --bg:#061216; --surface:#0B1D23; --text:#DCE8EA; --muted:#7E979E; --rule:#173139;
+    --cold:#4FB6C6; --warm:#E39445; --unwatched:#5C544C; --shadow:rgba(0,0,0,.4);
+  }
+  :root[data-theme="light"]{
+    --bg:#EEF2F3; --surface:#FAFCFC; --text:#0E2026; --muted:#5A737B; --rule:#CBD8DB;
+    --cold:#2E7F8C; --warm:#B4601A; --unwatched:#A99C90; --shadow:rgba(14,32,38,.07);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:var(--body);
+       font-size:17px;line-height:1.65;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:70rem;margin:0 auto;padding:clamp(1.5rem,4vw,4rem) clamp(1.1rem,4vw,2.5rem) 5rem}
+  .prose{max-width:37rem}
+  h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0}
+  h1{font-size:clamp(2.3rem,6vw,4rem);line-height:1.04;letter-spacing:-.02em;font-weight:600}
+  h2{font-size:clamp(1.4rem,3vw,1.9rem);line-height:1.15;letter-spacing:-.01em;font-weight:600}
+  h3{font-size:1.09rem;line-height:1.3;font-weight:600}
+  p{margin:0}
+  .lede{font-size:clamp(1.05rem,2vw,1.22rem);color:var(--muted);line-height:1.55;max-width:34rem}
+  .label{font-family:var(--mono);font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+  .num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+  header{display:flex;flex-direction:column;gap:1.5rem;padding-bottom:2.5rem;border-bottom:1px solid var(--rule)}
+  /* corpus strip */
+  .strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(8.5rem,1fr));gap:1px;
+         background:var(--rule);border:1px solid var(--rule);margin-top:.5rem}
+  .stat{background:var(--bg);padding:.85rem 1rem;display:flex;flex-direction:column;gap:.15rem}
+  .stat b{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:1.25rem;font-weight:600;letter-spacing:-.02em}
+  section{padding-top:3.2rem;display:flex;flex-direction:column;gap:1.15rem}
+  /* map */
+  figure{margin:0;display:flex;flex-direction:column;gap:.9rem}
+  .plate{background:var(--surface);border:1px solid var(--rule);padding:clamp(.6rem,2vw,1.2rem);
+         box-shadow:0 1px 3px var(--shadow)}
+  canvas{width:100%;height:auto;display:block}
+  .legend{display:flex;flex-wrap:wrap;gap:1.1rem;align-items:center}
+  .key{display:flex;align-items:center;gap:.45rem;font-family:var(--mono);font-size:.72rem;color:var(--muted)}
+  .sw{width:.85rem;height:.85rem;border:1px solid var(--rule);flex:none}
+  /* tables */
+  .scroll{overflow-x:auto}
+  table{border-collapse:collapse;width:100%;font-size:.9rem;min-width:30rem}
+  th,td{text-align:left;padding:.5rem .8rem .5rem 0;border-bottom:1px solid var(--rule);vertical-align:baseline}
+  th{font-family:var(--mono);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:500}
+  td.n{font-family:var(--mono);font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
+  em.sp{font-style:italic}
+  /* findings */
+  .find{display:flex;flex-direction:column;gap:.55rem;padding:1.3rem 0;border-top:1px solid var(--rule)}
+  .find:first-of-type{border-top:none}
+  .meta{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap}
+  .conf{font-family:var(--mono);font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;
+        padding:.16rem .5rem;border:1px solid currentColor}
+  .c-strong{color:var(--cold)} .c-mod{color:var(--warm)}
+  /* limits */
+  .limit{border-left:2px solid var(--warm);padding:.15rem 0 .15rem 1.1rem;display:flex;flex-direction:column;gap:.3rem}
+  .limits{display:flex;flex-direction:column;gap:1.5rem}
+  footer{margin-top:3.5rem;padding-top:1.5rem;border-top:1px solid var(--rule);color:var(--muted);font-size:.85rem;
+         display:flex;flex-direction:column;gap:.6rem}
+  a{color:var(--cold)}
+  :focus-visible{outline:2px solid var(--warm);outline-offset:2px}
+</style>
+
+<div class="wrap">
+<header>
+  <span class="label">Open animal-tracking corpus &middot; 1988&ndash;2026</span>
+  <h1>What we know about<br>where animals go</h1>
+  <p class="lede">A global movement corpus assembled from every openly-licensed tracking
+     repository we could reach &mdash; and an honest account of the questions it can, and
+     provably cannot, answer.</p>
+  <div class="strip">
+    <div class="stat"><b>338</b><span class="label">species</span></div>
+    <div class="stat"><b>18,424</b><span class="label">animals</span></div>
+    <div class="stat"><b>4.44M</b><span class="label">fixes</span></div>
+    <div class="stat"><b>38</b><span class="label">years</span></div>
+    <div class="stat"><b>7</b><span class="label">repositories</span></div>
+  </div>
+</header>
+
+<section>
+  <span class="label">The map</span>
+  <h2>Where nobody has ever watched</h2>
+  <p class="prose">Every cell is 5&deg; of the Earth. Colour is how many species have been tracked
+     through it; <span style="color:var(--unwatched);font-weight:600">grey marks land where no tracked
+     animal has ever been recorded</span>. This is not a map of animals. It is a map of where science
+     has pointed its antennas.</p>
+  <figure>
+    <div class="plate"><canvas id="map" aria-label="World map of tracking coverage"></canvas></div>
+    <div class="legend">
+      <span class="key"><span class="sw" style="background:var(--unwatched)"></span>untracked land</span>
+      <span class="key"><span class="sw" style="background:color-mix(in oklab,var(--cold) 28%,transparent)"></span>1&ndash;2 species</span>
+      <span class="key"><span class="sw" style="background:color-mix(in oklab,var(--cold) 62%,transparent)"></span>3&ndash;7</span>
+      <span class="key"><span class="sw" style="background:var(--cold)"></span>8&ndash;19</span>
+      <span class="key"><span class="sw" style="background:var(--warm)"></span>20+</span>
+    </div>
+  </figure>
+  <p class="prose">Coverage counts are a trap: a 5&deg; cell is roughly 550&nbsp;km across, so a single
+     stork crossing the Sahara once makes it look &ldquo;covered&rdquo;. Measured by <em>intensity</em>
+     instead, the picture inverts.</p>
+  <div class="scroll"><table>
+    <thead><tr><th>Land zone</th><th>Cells</th><th>Median species</th><th>Median fixes</th><th>Well studied</th></tr></thead>
+    <tbody>
+      <tr><td>Tropical &gt;20&deg;C</td><td class="n">238</td><td class="n">5</td><td class="n">381</td><td class="n">53%</td></tr>
+      <tr><td>Subtropical 10&ndash;20&deg;C</td><td class="n">119</td><td class="n">7</td><td class="n">1,287</td><td class="n">73%</td></tr>
+      <tr><td>Temperate 0&ndash;10&deg;C</td><td class="n">128</td><td class="n">7</td><td class="n">878</td><td class="n">71%</td></tr>
+      <tr><td>Polar &lt;0&deg;C</td><td class="n">433</td><td class="n">1</td><td class="n">11</td><td class="n">26%</td></tr>
+    </tbody>
+  </table></div>
+  <p class="prose">The tropics are known roughly <strong>3.4&times; more thinly</strong> than the
+     subtropics. But the truly dark continent is polar: a median of <strong>one species and eleven
+     fixes</strong> per cell, across the largest land zone on the map.</p>
+</section>
+
+<section>
+  <span class="label">Findings</span>
+  <h2>Four things the data says</h2>
+
+  <div class="find">
+    <div class="meta"><h3>Isotherm-following is universal. Circumnavigation is not.</h3>
+      <span class="conf c-strong">strong</span></div>
+    <p class="prose">Animals ride narrow temperature bands at every latitude &mdash; but only the
+       Southern Ocean&rsquo;s unbroken circumpolar current lets one ride a band the whole way around
+       the world. In the north, continents cut the highway short.</p>
+    <div class="scroll"><table>
+      <thead><tr><th>Species</th><th>Longitude roamed</th><th>Thermal band</th><th>Realm</th></tr></thead>
+      <tbody>
+        <tr><td><em class="sp">Onychoprion fuscatus</em> &middot; sooty tern</td><td class="n">160&deg;</td><td class="n">3.4&deg;C</td><td>tropical</td></tr>
+        <tr><td><em class="sp">Thalassarche chrysostoma</em> &middot; grey-headed albatross</td><td class="n">280&deg;</td><td class="n">10.1&deg;C</td><td>Antarctic</td></tr>
+        <tr><td><em class="sp">Fulmarus glacialis</em> &middot; northern fulmar</td><td class="n">205&deg;</td><td class="n">9.6&deg;C</td><td>Arctic</td></tr>
+        <tr><td><em class="sp">Phoebetria palpebrata</em> &middot; light-mantled albatross</td><td class="n">355&deg;</td><td class="n">12.3&deg;C</td><td>Antarctic</td></tr>
+        <tr><td><em class="sp">Limosa lapponica</em> &middot; bar-tailed godwit</td><td class="n">359&deg;</td><td class="n">19.6&deg;C</td><td>land-breeding</td></tr>
+      </tbody>
+    </table></div>
+    <p class="prose">The godwit is the counter-case: it roams just as far but through a band twice as
+       wide, because it commutes from Arctic tundra to tropical coast. Ocean specialists
+       <em>follow</em> isotherms; land-breeding migrants <em>cross</em> them.</p>
+  </div>
+
+  <div class="find">
+    <div class="meta"><h3>The white stork is arriving earlier &mdash; but not because of warmth.</h3>
+      <span class="conf c-strong">strong</span></div>
+    <p class="prose">Our best-sampled species (24 years, 498 animal-years) advances its spring
+       migration by <span class="num">&minus;2.3</span> days per decade, matching the published
+       literature. Yet its arrival has <em>no</em> relationship to spring temperature on its breeding
+       grounds: <span class="num">r&nbsp;=&nbsp;&minus;0.03</span>. That is flat, not weak. A
+       climate-shaped trend with a non-thermal cause &mdash; and this corpus cannot say which one.
+       Of nine species tested, only the lesser black-backed gull showed a clear thermal response
+       (<span class="num">&minus;3.4 days/&deg;C</span>).</p>
+  </div>
+
+  <div class="find">
+    <div class="meta"><h3>The planet has two different migration rhythms.</h3>
+      <span class="conf c-strong">solid</span></div>
+    <p class="prose">Northern-hemisphere animals show the textbook double pulse &mdash; a spring surge
+       (March&ndash;May) and a larger autumn one (September&ndash;October, ~<span class="num">20</span>
+       km/day), with lulls for midsummer breeding and deep winter. Southern-hemisphere animals show
+       no seasonal pulse at all: a steady <span class="num">30&ndash;40</span> km/day year-round,
+       because that data is dominated by pelagic seabirds and seals that simply never stop.</p>
+  </div>
+
+  <div class="find">
+    <div class="meta"><h3>Records, once the corrupt tracks are removed.</h3>
+      <span class="conf c-mod">verified subset</span></div>
+    <div class="scroll"><table>
+      <tbody>
+        <tr><td>Northernmost fix</td><td class="n">87.0&deg;N</td><td><em class="sp">Vulpes lagopus</em> &middot; arctic fox, on the polar pack ice</td></tr>
+        <tr><td>Southernmost fix</td><td class="n">81.8&deg;S</td><td><em class="sp">Diomedea exulans</em> &middot; wandering albatross</td></tr>
+        <tr><td>Longest journey</td><td class="n">362,017 km</td><td><em class="sp">Diomedea exulans</em> &middot; roughly the Earth&ndash;Moon distance</td></tr>
+        <tr><td>Runner-up</td><td class="n">229,791 km</td><td><em class="sp">Pagophila eburnea</em> &middot; ivory gull</td></tr>
+      </tbody>
+    </table></div>
+  </div>
+</section>
+
+<section>
+  <span class="label">Limits</span>
+  <h2>What this corpus provably cannot answer</h2>
+  <p class="prose">This is the unusual part, and the reason to trust anything above it. Each limit
+     below was learned by being refuted &mdash; a confident result that fell apart under checking.</p>
+  <div class="limits">
+    <div class="limit">
+      <h3>Cross-species geography is a map of research funding</h3>
+      <p class="prose">Asked where the planet&rsquo;s migration converges, the corpus answers
+         &ldquo;Belgium&rdquo; &mdash; the home institute of its single largest data source. Three
+         separate methods (hotspots, co-occurrence, network centrality) each rediscovered the funders
+         rather than the biology. Betweenness centrality was worse than useless: one cell scored
+         <span class="num">1.1M</span> while containing a single species, because the metric rewards
+         chain-like graph shape, not ecological importance.</p>
+    </div>
+    <div class="limit">
+      <h3>A trend is only visible if it beats the spread between individuals</h3>
+      <p class="prose">Same species, same years, opposite outcomes. Arrival <em>date</em> varies about
+         13 days between storks, and the trend is ~5.5 days over 24 years &mdash; marginal, but
+         detectable. Wintering <em>latitude</em> varies by <span class="num">70&deg;</span> between
+         individuals, so a 1&ndash;3&deg;/decade shift is permanently invisible. Not biology.
+         Variance.</p>
+    </div>
+    <div class="limit">
+      <h3>Presence is not knowledge; extremes always lie</h3>
+      <p class="prose">Eighty percent of land cells contain a tracked animal, which sounds like broad
+         coverage and means almost nothing. Meanwhile every metric built on a raw minimum or maximum
+         produced a falsehood: a killifish at the North Pole, a pintail credited with 430,000&nbsp;km,
+         and five phantom &ldquo;circumnavigators&rdquo; that were really Bering Strait animals
+         straddling the antimeridian. Percentiles and eligibility gates, not extremes.</p>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <p><span class="label">Sources</span> &nbsp;GBIF &middot; Movebank &middot; Zenodo &middot; Dryad &middot;
+     NOAA/IOOS Animal Telemetry Network &middot; USGS ScienceBase &middot; PANGAEA. Openly licensed
+     (CC0 / CC&nbsp;BY) only; non-commercial data is flagged and walled.</p>
+  <p><span class="label">Environment</span> &nbsp;ETOPO1 relief at 0.25&deg; &middot; ERA5 monthly
+     temperature via Open-Meteo &middot; BioShifts (30,534 published range-shift records).</p>
+  <p><span class="label">Curation</span> &nbsp;18,424 of 23,068 individuals meet the
+     eligibility gate (&ge;20 clean fixes, &le;6-year span, &le;300&nbsp;km/day, named species).
+     3,449 teleport fixes, six species and two individuals are quarantined as corrupt, each with a
+     documented reason.</p>
+</footer>
+</div>
+
+<script>
+  const G = {"nLat":36,"nLon":72,"step":5,"species":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,5,4,3,5,4,4,3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,3,3,2,3,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3,3,6,7,7,6,7,7,4,5,5,4,2,1,2,2,3,2,3,3,2,1,3,3,3,1,0,0,1,1,4,5,5,5,4,5,5,6,6,4,2,3,2,1,2,1,0,0,0,1,1,0,2,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3,6,7,6,6,6,5,4,4,3,4,3,3,3,3,4,3,4,4,3,3,4,5,6,6,6,6,5,2,3,3,4,7,5,5,4,4,5,6,6,6,6,6,7,7,5,5,8,6,7,5,8,7,8,10,9,7,3,3,2,2,2,2,1,3,1,2,6,8,4,5,5,4,5,6,5,4,4,4,2,4,4,3,3,4,3,3,4,3,3,3,3,4,4,5,7,5,6,9,10,10,8,6,6,5,5,5,6,5,3,5,5,5,6,6,6,7,7,9,10,8,8,7,7,9,10,8,8,8,8,7,7,6,6,5,4,5,5,8,8,9,8,6,6,5,7,6,4,6,7,7,7,5,8,7,5,7,6,4,2,3,3,4,4,4,5,4,6,8,9,10,9,8,7,8,8,7,7,6,4,4,8,9,7,7,7,8,8,9,10,10,10,8,9,7,6,6,6,8,9,9,7,6,5,4,4,4,4,6,5,5,6,6,7,7,9,8,8,7,7,5,5,5,6,5,5,5,6,4,4,5,4,5,4,3,4,4,5,6,7,6,6,7,10,9,8,9,8,8,7,5,6,6,8,10,10,9,10,11,9,10,10,12,14,13,10,9,6,5,6,9,7,7,5,5,4,4,4,5,5,5,6,7,5,6,7,7,10,9,8,5,5,4,5,4,3,4,3,3,2,5,4,5,5,3,6,3,3,4,3,3,4,6,3,4,4,7,7,7,9,7,7,7,7,6,7,9,9,8,9,9,11,11,10,11,12,12,10,10,7,6,7,6,8,6,5,3,3,3,3,4,3,4,4,6,7,6,7,7,6,6,5,4,4,3,3,3,3,1,1,2,2,2,2,2,1,1,1,1,1,2,2,1,3,4,7,4,4,5,5,3,4,5,5,5,4,4,6,6,6,6,7,7,9,8,9,9,9,8,8,6,5,6,6,5,5,5,5,3,2,2,2,2,2,3,3,3,5,6,6,6,5,4,4,5,4,3,3,3,2,2,1,1,2,2,2,2,0,1,1,1,1,0,1,1,1,4,7,2,5,6,3,3,1,1,2,0,2,2,4,4,4,4,5,6,3,5,7,7,4,5,2,2,4,4,4,4,2,5,3,2,2,2,2,2,2,2,2,2,5,4,5,7,3,2,3,4,4,3,3,2,2,1,1,1,1,1,0,0,0,0,0,0,0,0,0,1,1,1,6,2,6,7,6,1,0,0,0,1,1,1,1,1,2,2,3,2,7,5,4,5,4,2,2,1,2,2,2,2,2,2,2,2,2,2,2,2,5,3,2,2,4,1,1,3,3,1,2,3,3,2,1,1,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,2,3,4,6,6,5,1,0,0,0,0,0,1,1,1,1,1,1,3,4,5,5,9,2,1,1,1,2,2,2,2,2,2,1,1,1,1,1,2,2,2,0,0,0,0,0,3,2,3,3,2,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,2,5,3,5,8,5,2,0,0,0,1,0,0,1,1,1,0,0,3,5,5,7,11,4,1,1,1,0,2,2,1,1,2,1,0,0,0,0,2,0,0,0,0,0,0,1,2,1,3,2,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,4,6,5,9,8,5,0,0,0,0,0,0,0,0,0,0,0,0,7,5,6,6,6,7,2,1,1,1,0,0,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,2,1,0,1,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,8,13,12,10,7,6,5,0,3,2,1,1,1,1,0,0,0,0,3,3,4,5,4,5,3,2,1,1,2,2,1,1,0,1,0,0,0,1,0,1,1,2,3,2,1,1,1,1,0,1,1,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,7,8,9,8,5,4,4,2,1,4,2,2,2,2,5,1,1,1,2,2,3,2,4,6,6,2,1,2,2,3,3,3,1,1,1,1,0,0,1,1,2,2,0,2,2,2,0,0,1,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,5,5,7,11,6,6,5,5,4,5,4,3,1,1,2,2,2,1,1,2,5,3,3,3,4,7,9,3,2,2,2,2,3,3,1,1,1,1,0,2,2,0,1,2,1,1,0,0,1,1,0,0,0,1,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,7,12,8,5,6,3,6,5,1,1,1,1,1,1,1,3,3,2,2,4,5,4,3,5,6,4,4,2,2,2,1,2,1,1,1,0,0,1,1,1,2,2,0,2,0,0,1,0,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,1,0,0,1,1,3,2,6,13,15,9,8,8,6,5,1,1,1,1,1,0,1,7,5,7,5,2,4,5,4,6,7,8,6,4,2,2,1,1,1,1,0,0,0,5,3,2,1,2,2,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,1,1,1,1,0,0,1,4,5,12,12,9,6,8,7,5,3,2,2,0,1,0,0,1,10,8,9,7,5,3,5,6,6,7,11,11,6,5,2,2,1,1,1,1,0,0,1,9,9,3,0,2,1,1,0,0,0,0,0,0,0,0,0,1,0,0,1,2,3,2,1,2,1,1,1,1,1,2,6,9,14,19,12,8,7,7,6,3,2,2,0,0,0,0,0,0,12,12,8,7,7,4,3,6,6,7,10,12,8,5,3,3,0,1,2,1,0,0,1,4,6,4,1,1,2,0,1,1,0,0,0,0,0,0,0,0,0,1,1,1,3,1,2,1,1,1,1,1,2,6,12,6,17,12,9,17,11,10,3,3,2,2,0,0,0,0,0,0,10,12,8,7,6,5,4,5,5,8,9,11,5,4,1,2,3,3,2,2,1,1,3,3,4,5,4,2,1,1,1,0,1,0,0,0,0,0,0,0,1,2,1,1,1,1,1,0,0,1,1,2,7,14,11,8,27,23,17,36,15,4,3,2,1,2,0,0,0,0,0,0,1,11,11,6,4,6,5,4,4,6,12,8,7,3,6,3,4,4,3,3,4,4,5,3,2,5,5,6,3,2,2,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1,1,1,1,3,9,17,16,9,10,20,21,21,23,19,5,3,3,1,4,1,1,0,0,0,0,0,5,16,8,5,5,5,5,7,6,10,13,6,7,4,4,2,2,3,4,3,3,4,3,4,3,8,5,5,3,2,1,0,0,0,0,0,0,0,0,0,2,3,1,3,2,2,2,2,2,3,22,14,13,8,10,19,32,18,18,28,18,7,4,2,2,1,1,1,1,2,1,2,4,20,20,10,10,7,9,7,7,9,10,10,8,4,3,3,5,1,2,2,2,1,3,4,4,3,8,5,5,2,4,6,0,0,0,0,0,0,0,1,1,2,3,2,3,3,2,3,3,8,22,9,14,12,11,18,16,13,14,19,27,12,10,5,3,2,1,1,1,1,1,2,2,16,21,18,13,10,12,10,10,9,6,10,7,4,4,3,6,6,5,3,4,4,6,4,5,5,6,4,3,5,5,5,5,0,2,0,0,0,0,3,2,2,2,2,4,2,4,4,6,15,26,12,10,10,14,19,16,7,7,10,16,15,11,5,6,3,0,1,2,1,2,2,2,2,17,20,21,18,21,16,8,9,7,8,7,8,4,2,3,5,3,4,4,6,6,5,6,6,4,5,2,2,2,5,4,6,4,0,1,0,0,7,8,10,12,8,5,6,9,7,19,20,8,9,12,12,13,12,4,7,10,10,8,9,10,8,4,4,1,1,1,1,0,0,2,7,9,36,44,28,27,21,14,12,9,6,8,8,5,4,5,4,4,3,2,3,3,1,2,2,3,2,3,2,4,5,3,5,9,7,5,8,5,7,14,20,23,22,19,17,18,23,20,9,12,10,11,7,4,9,10,8,8,9,10,11,12,9,4,3,3,0,0,2,0,0,2,6,10,4,20,24,19,25,20,13,11,10,7,5,3,3,2,2,3,2,2,2,1,1,1,1,1,1,1,1,3,6,5,3,6,8,9,7,4,13,18,22,21,4,16,21,22,10,10,9,8,9,9,4,4,7,7,10,11,12,11,14,11,9,10,6,5,2,1,2,2,1,3,2,0,2,3,3,12,17,15,16,16,14,8,6,4,3,5,2,1,1,1,1,1,1,1,1,1,1,2,2,2,3,2,3,3,5,9,10,12,14,18,20,22,7,8,15,19,16,11,9,10,10,10,10,11,7,10,11,11,10,7,11,10,11,11,5,4,3,4,5,6,3,0,0,0,0,0,2,4,10,9,9,13,14,13,13,11,7,5,4,2,3,2,1,1,2,1,1,1,1,1,0,1,2,3,3,5,4,1,4,7,6,6,10,16,18,19,16,14,5,10,9,7,8,7,10,8,11,8,9,11,11,10,9,6,7,5,1,2,0,1,3,4,3,1,1,0,0,0,0,0,1,3,2,2,2,2,4,5,3,6,6,5,5,6,5,4,3,4,2,2,2,2,1,2,2,3,3,4,2,2,3,5,1,1,1,0,0,1,0,0,0,0,1,4,2,4,4,5,6,6,4,5,4,5,6,3,1,0,1,0,1,1,0,1,2,1,1,1,1,1,2,1,0,0,0,0,0,0,0,1,0,0,0,0,0,4,4,4,2,1,1,0,0,0,1,2,2,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,1,1,1,2,0,0,0,1,3,3,1,3,2,3,2,0,2,1,0,2,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,1,0,1,1,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,0,0],"points":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,5,2,3,4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,83,378,685,602,490,317,147,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,17,113,1084,2581,1447,83,12,10,4,3,4,7,4,3,3,4,0,0,0,0,0,0,0,0,6,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,5255,16514,1935,357,484,394,192,346,410,222,199,847,438,386,322,256,126,294,284,380,276,697,1096,2618,3067,263,0,0,20,27,268,1172,4012,2675,4233,1619,884,910,1020,299,34,71,32,14,11,4,0,0,0,1,1,0,5,1,2,7,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,174,1702,1402,452,483,728,631,290,210,59,212,119,86,89,318,157,80,144,166,410,381,445,646,946,4609,11179,7569,500,447,372,61,347,235,178,223,266,206,260,336,547,515,726,647,883,715,888,1245,860,622,823,677,1052,4361,1951,5008,9589,2578,226,259,9,99,149,291,54,150,27,220,2905,4440,377,286,245,281,371,261,302,170,236,270,138,89,208,124,216,186,292,250,119,74,77,117,126,256,280,304,355,362,694,2385,12201,11309,6020,1991,1095,410,323,207,292,211,370,646,696,738,926,552,807,986,941,1023,683,717,696,707,782,1922,3607,6721,3633,2017,917,597,682,616,170,166,263,363,280,560,1047,1050,574,711,1025,557,418,231,197,380,202,140,106,162,189,232,175,144,166,209,120,182,115,145,255,256,216,175,110,509,422,663,390,1030,1741,2141,2560,2424,2192,1885,1337,1163,1121,1174,1641,1658,1777,1576,1042,2077,1919,1383,1267,735,825,831,984,1184,2656,3394,2134,1560,648,423,285,369,239,158,308,223,234,140,148,162,170,176,506,1107,406,321,223,211,175,118,90,115,82,56,33,102,118,59,31,246,49,63,48,90,108,244,436,2441,132,215,2918,1712,603,901,3079,9028,1633,1206,743,576,691,913,1907,4071,1491,1958,2348,5535,5453,4467,2690,1677,718,553,465,683,4335,14885,4734,1439,1132,867,750,825,880,454,588,544,342,411,682,711,1353,642,1755,1028,6433,543,116,676,341,129,172,107,48,35,49,23,145,150,62,32,38,35,34,79,107,231,533,1896,31,40,815,724,542,210,659,848,513,523,551,349,668,861,502,840,2249,1596,3001,4090,6663,6661,22743,4924,1486,1093,831,1284,8037,14710,3306,1407,922,974,551,533,648,497,568,516,581,524,1206,7155,3781,827,548,662,452,373,191,407,265,179,80,34,28,8,42,18,5,6,4,6,4,1,2,34,11,88,39,369,1361,25,503,689,215,191,211,154,319,45,45,75,354,876,233,803,533,1120,2602,2541,3100,2714,3331,1923,1383,747,339,357,714,1078,493,417,488,166,131,122,173,259,439,1088,2243,3372,4351,14586,6127,1040,344,288,286,257,189,202,234,79,22,4,8,20,20,11,15,15,0,7,6,2,2,0,5,4,2,76,418,1926,4292,1288,654,24,1,5,8,0,3,3,54,17,41,18,38,199,1312,1205,1248,436,252,449,434,227,147,165,289,440,165,123,74,64,32,37,76,130,347,301,571,1723,3486,3923,2732,1259,91,125,110,77,675,355,83,12,2,5,3,10,2,4,0,0,0,0,0,0,0,0,0,1,3,26,366,441,553,1226,3248,158,0,0,0,1,2,2,5,7,9,8,8,202,7567,3026,2022,904,58,139,188,83,40,94,141,258,76,82,19,13,21,16,20,62,614,34,101,223,1287,3,1,131,38,30,41,50,82,164,18,2,0,1,2,2,0,0,0,0,0,0,0,0,0,0,0,0,0,34,26,58,872,923,136,107,0,0,0,0,0,1,1,2,3,1,2,178,141,161,2023,1338,17,6,11,21,14,22,55,171,66,28,5,2,3,4,6,145,276,5434,0,0,0,0,0,673,13,22,13,13,17,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,45,24,12,159,580,5292,13,0,0,0,2,0,0,2,2,2,0,0,227,455,13103,1608,14730,108,271,1,1,0,17,48,68,116,16,5,0,0,0,0,9,0,0,0,0,0,0,8,125,1,15,11,6,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,62,26,17,1994,10659,65,0,0,0,0,0,0,0,0,0,0,0,0,790,14459,182,675,1175,1231,20,4,9,4,0,0,1,2,0,0,0,0,0,0,0,0,711,1517,3,900,3,19,1,0,1,0,1,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3,254,358,371,1941,50,111,649,0,310,21,32,18,1,1,0,0,0,0,163,59,963,30,485,2688,149,172,129,36,70,26,1,1,0,2,0,0,0,22,0,3,9,216,5271,1290,3,4,5,1,0,1,1,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,236,360,147,119,106,57,45,17,2,1710,1932,164,226,390,1602,67,18,11,4,468,1153,211,230,854,1325,11,63,1029,732,409,131,7320,5,5,2,1,0,0,3,92,132,8,0,46,368,2,0,0,2,0,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,135399,38114,765,743,207,109,64,618,105,450,287,490,13,171,271,483,374,99,66,31,2764,4687,847,382,125,5944,27196,102,27,811,3596,52,43,33,21,24,4,1,0,7,23,0,11,35,4,271,0,0,2,2,0,0,0,11,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,6,95,516,362,80,60,18,266,46,24,102,85,76,40,98,66,43,36,33,1120,3528,2210,393,34,1063,7991,57,328,253,329,264,123,229,19,18,3,0,0,35,27,9,213,2,0,136,0,0,1,0,0,0,0,15,1,1,0,0,0,0,0,0,0,0,0,0,1,0,0,2,62,267,139,30,2823,10308,1337,2745,1564,265,125,10,5,3,4,2,0,1,1197,2291,3971,1390,1342,1486,1296,381,384,993,2615,416,165,40,94,165,70,21,2,0,0,0,149,142,72,24,28,3,0,0,13,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,1,4,5,2,0,0,3,36,80,2372,3331,1081,16,1442,257,51,6,7,2,0,1,0,0,1,13909,2736,3218,1517,379,474,1840,6641,4768,6307,4424,1818,778,55,2,2,1,1,6,552,0,0,133,2287,5266,173,0,4,1,2,0,0,0,0,0,0,0,0,0,1,0,0,1,7,311,32,35,14,1,1,3,2,7,16,72,563,2640,3855,652,70,310,1815,491,304,13,3,0,0,0,0,0,0,8749,2572,6116,5685,679,238,99,150,3928,596,3147,1442,655,8,345,20,0,1,2,93,0,0,2,81,769,34,355,5,4,0,3,1,0,0,0,0,0,0,0,0,0,7,60,136,1959,18,22,24,7,3,7,14,43,534,6596,4583,4442,1007,3066,874,2269,66,18,70,14,2,0,0,0,0,0,0,12978,869,753,266,67,61,36,50,56,409,1427,299,157,542,3375,560,46,3320,1441,17,1,1,768,133,27,1262,47,6,1,2,1,0,1,0,0,0,0,0,0,0,6,23,11,2,1,1,1,0,0,6,4,29,494,5455,7935,4206,25285,17675,9643,39721,184,8,7,7,1,4,0,0,0,0,0,0,27,7188,631,196,65,76,231,40,56,65,3691,423,305,246,252,915,562,19,1262,1049,1333,178,2683,17,212,84,68,5274,245,72,2,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1,3,8,8,19,1041,22176,26369,1247,4687,1433,5399,19987,6025,4410,32,6,5,2,13,15,1,0,0,0,0,0,52,24353,923,92,116,545,186,221,804,5239,8835,953,769,227,11,3,111,32,157,166,84,290,178,120,124,900,164,1023,88,153,8,0,0,0,0,0,0,0,0,0,5,3,30,22,3,21,14,41,141,362,15857,8182,200236,66097,2353,3403,10107,18260,5335,50814,3659,210,66,3,15,36,8,4,2,12,11,7,9,62363,25527,6127,2514,1168,183,1025,534,3097,2149,653,507,45,13,152,126,31,24,23,11,13,147,306,38,77,350,323,786,3,65,1038,0,0,0,0,0,0,0,19,53,334,445,367,531,540,421,327,364,320,3390,8635,177508,146826,1363,1270,1612,6739,3876,32055,33022,10174,1609,516,54,13,4,2,11,21,22,3,14,12267,22480,7484,48647,1538,931,1004,5215,571,187,1857,344,135,22,7,6787,5510,553,49,31,98,878,38,951,1006,963,221,20,47,46,1299,1018,0,2,0,0,0,0,70,6,46,182,163,259,237,309,429,376,4276,41523,19158,78067,4414,2559,11046,6793,542,894,4514,26526,4274,3737,1210,1846,48,0,1,11,34,43,18,2,64,19205,82339,65024,13047,20989,3412,2511,947,561,721,943,221,168,2,29,66,8,293,231,2794,77,40,160,1964,560,220,90,294,63,379,44,327,7,0,1,0,0,591,1103,1392,709,269,20,37,87,81,2047,4624,23215,131167,4064,6483,991,196,16,243,632,963,920,746,1164,803,103,19,1,9,17,1,0,0,2,217,15546,447305,113060,33711,7077,14919,1812,964,360,402,646,193,85,366,258,155,44,34,143,56,19,52,7,89,916,13,90,13,46,219,34,28,885,155,32,3087,2454,1077,2348,1670,8077,5960,11218,303,274,2370,4940,529,61331,252,26802,31,14,93,4226,84,816,9464,4164,1306,1314,173,60,24,55,0,0,2,0,0,2,21,1277,105,2465,4645,5581,7219,4417,1049,1505,694,726,109,22,46,16,117,295,15,34,5,12,11,7,14,98,11,5,1,26,53,167,188,170,746,512,315,206,4950,12173,10242,4206,15,3316,9436,20272,333,64,43,40,339,1202,48,21,171,142,406,3599,3533,4425,2731,1146,119,596,508,64,4,1,3,22,2,3,3,0,8,168,311,1551,9051,2784,807,2018,1300,158,464,140,66,126,97,28,2,14,3,14,31,154,23,14,27,16,4,6,223,27,32,3,51,521,816,3085,2651,7176,6820,7327,102,417,679,4689,629,580,108,135,127,381,883,680,183,635,3407,3874,2231,1511,1375,1325,328,2301,27,258,105,40,121,45,16,0,0,0,0,0,689,204,1473,456,414,1197,2709,4973,3722,1206,606,1950,72,115,80,19,7,5,44,43,14,3,106,11,0,2,240,843,468,513,421,2,11,167,274,465,694,7743,4530,4865,5005,174,17,151,208,122,32,41,224,272,869,1758,4211,30006,81783,997,386,112,436,374,57,6,0,1,20,1470,46,18,6,0,0,0,0,0,4,1947,1918,3,9,12,3862,2808,7,580,796,568,234,1107,180,336,214,2450,111,7,227,1465,4,14,96,32,156,513,81,51,139,364,15,2,1,0,0,1,0,0,0,0,3,35,15,246,239,27,221,68,782,417,56,220,257,17,60,0,2,0,1,1,0,104,885,13,9,14,11,52,2628,93419,0,0,0,0,0,0,0,1333,0,0,0,0,0,127,107,287,8,57,132,0,0,0,2,31,18,9,11,0,0,0,0,0,0,0,0,0,0,0,0,0,2,0,6,2,6,3,0,0,0,180,45,115,47,81,1318,1437,72,0,4,2,0,10,0,3,230,28,42,23,34,26,15,18,17,32,10,15,8,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,4,6,2,0,0,0,0,0,0,0,0,0,0,0,2,0,2,2,0,0,0,2,10,4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,0,0,0,1,0,0,0,0],"land":[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,0,0,0,0,0,0,1,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,1,1,0,1,1,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,1,1,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,0,0,0,0,1,1,1,1,1,0,0,0,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,1,0,1,1,1,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,1,1,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,1,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,1,0,0,0,1,1,1,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,1,1,1,0,0,1,1,1,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,1,0,0,0,0,0,0,0,0,1,0,0,0,1,1,1,1,1,1,1,1,1,1,1,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,1,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,1,1,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,1,1,1,0,0,0,1,1,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,1,1,0,0,1,1,1,1,1,1,0,1,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,1,1,1,1,1,1,0,0,0,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,1,1,1,1,1,1,0,1,1,1,1,1,0,1,1,1,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]};
+  const cv = document.getElementById("map");
+  const cs = getComputedStyle(document.documentElement);
+  function draw(){
+    const css = cs.getPropertyValue.bind(cs);
+    const cold = css("--cold").trim(), warm = css("--warm").trim(),
+          un = css("--unwatched").trim(), rule = css("--rule").trim();
+    const w = cv.parentElement.clientWidth, cell = w / G.nLon, h = cell * G.nLat;
+    const dpr = window.devicePixelRatio || 1;
+    cv.width = w * dpr; cv.height = h * dpr; cv.style.height = h + "px";
+    const x = cv.getContext("2d"); x.setTransform(dpr,0,0,dpr,0,0); x.clearRect(0,0,w,h);
+    for (let i=0;i<G.nLat;i++) for (let j=0;j<G.nLon;j++){
+      const k=i*G.nLon+j, s=G.species[k];
+      const px=j*cell, py=(G.nLat-1-i)*cell;                 // flip: north at top
+      let fill=null, a=1;
+      if(s>0){ if(s>=20){fill=warm;} else if(s>=8){fill=cold;}
+               else if(s>=3){fill=cold;a=.62;} else {fill=cold;a=.28;} }
+      else if(G.land[k]){ fill=un; a=.55; }
+      if(!fill) continue;
+      x.globalAlpha=a; x.fillStyle=fill; x.fillRect(px,py,cell+.5,cell+.5);
+    }
+    x.globalAlpha=1; x.strokeStyle=rule; x.lineWidth=1;
+    x.beginPath(); x.moveTo(0,h/2); x.lineTo(w,h/2); x.stroke();   // equator
+  }
+  draw();
+  addEventListener("resize", draw);
+  new MutationObserver(draw).observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]});
+  matchMedia("(prefers-color-scheme:dark)").addEventListener("change", draw);
+</script>
