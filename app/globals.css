@@ -149,6 +149,60 @@ a {
   color: var(--warm);
 }
 
+/* ---------- catalog grid ----------
+   Each card carries the animal's real track as a small glowing signature. Without
+   them this page was 320 identical text tiles, which told you nothing about how
+   differently these animals actually move. */
+.grid {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
+  gap: 1px;
+  background: var(--rule);
+  border: 1px solid var(--rule);
+}
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  background: var(--deep);
+  padding: 0.9rem 1.1rem 1rem;
+  text-decoration: none;
+  color: var(--text);
+  height: 100%;
+  transition: background 0.18s;
+}
+.card:hover {
+  background: var(--panel);
+}
+.spark {
+  display: block;
+  width: 100%;
+  height: 4.5rem;
+  margin-bottom: 0.35rem;
+  overflow: visible;
+}
+.cardName {
+  font-family: var(--display);
+  font-size: 1.05rem;
+  line-height: 1.2;
+}
+.cardSci {
+  font-style: italic;
+  font-family: var(--display);
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+.cardKm {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 0.8rem;
+  color: var(--warm);
+  margin-top: 0.25rem;
+}
+
 /* ---------- shared page chrome ---------- */
 .siteFooter {
   border-top: 1px solid var(--rule);

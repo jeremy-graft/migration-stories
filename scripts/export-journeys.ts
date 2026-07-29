@@ -10,8 +10,38 @@ import { createInterface } from "node:readline";
 import { fileURLToPath } from "node:url";
 import { existsSync } from "node:fs";
 import { BAD_SPECIES, BAD_INDIVIDUALS, NON_SPECIES, SYNONYM_DUPLICATES } from "../lib/bad-species";
-import { slugify } from "../lib/earth-math";
+import { slugify, wrap } from "../lib/earth-math";
 import { normalizeLicense } from "../lib/licenses";
+
+// A tiny signature of the track's own shape, for the catalog cards: the animal's
+// real path decimated and normalised into a 100x60 box, aspect preserved so a
+// circumpolar loop still reads as a loop and a pole-to-tropics dash as a dash.
+// Longitudes are taken relative to the track's own centre, so dateline-straddling
+// animals don't smear across the whole box.
+function sparkline(pts: (number | null)[][], lonC: number): string {
+  const MAXP = 48;
+  const step = Math.max(1, Math.ceil(pts.length / MAXP));
+  const sel = pts.filter((_, i) => i % step === 0);
+  if (sel.length < 2) return "";
+  const xs = sel.map((p) => wrap((p[0] as number) - lonC));
+  const ys = sel.map((p) => p[1] as number);
+  const x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys);
+  const w = Math.max(1e-6, x1 - x0), h = Math.max(1e-6, y1 - y0);
+  const BW = 100, BH = 60, PAD = 5;
+  const s = Math.min((BW - 2 * PAD) / w, (BH - 2 * PAD) / h);
+  const ox = (BW - w * s) / 2, oy = (BH - h * s) / 2;
+  // integer precision: 1 unit is 1% of the box, far finer than a 240px card shows,
+  // and it keeps the manifest (inlined into the catalog page) roughly a third smaller
+  let d = "", px = NaN, py = NaN;
+  for (let i = 0; i < sel.length; i++) {
+    const X = Math.round(ox + (xs[i] - x0) * s);
+    const Y = Math.round(BH - (oy + (ys[i] - y0) * s));   // flip: north up
+    if (X === px && Y === py) continue;                    // drop repeats after rounding
+    d += (d ? "L" : "M") + X + " " + Y;
+    px = X; py = Y;
+  }
+  return d;
+}
 
 const R = (p: string) => fileURLToPath(new URL(`../${p}`, import.meta.url));
 const temp: (number | null)[][] = JSON.parse(readFileSync(R("temp-5deg.json"), "utf8"));
@@ -140,7 +170,14 @@ async function main() {
       cam: { lon: +lonC.toFixed(1), lat: +latC.toFixed(1), lonSpan: Math.round(lonSpan), latSpan: Math.round(latSpan) },
       start: Math.round(P[0].t / 86400000), end: Math.round(P[P.length - 1].t / 86400000), pts,
     }));
-    manifest.push({ slug, sci: b.sci, common, group, km, days, fixes: P.length, band, license: attrib?.license ?? "OTHER" });
+    manifest.push({
+      slug, sci: b.sci, common, group, km, days, fixes: P.length, band,
+      license: attrib?.license ?? "OTHER",
+      spark: sparkline(pts, lonC),
+      // median temperature drives the card's colour, so the grid itself shows the
+      // cold-to-warm spread of the corpus instead of 320 identical tiles
+      tmid: temps.length ? temps[Math.floor(temps.length / 2)] : null,
+    });
     written++;
   }
 

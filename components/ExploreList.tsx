@@ -3,6 +3,7 @@
 // Pure client filtering over the manifest passed from the server (no fetch).
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import { tcol } from "@/lib/earth-math";
 
 interface Row {
   slug: string;
@@ -13,6 +14,20 @@ interface Row {
   days: number;
   fixes: number;
   license: string;
+  spark: string; // SVG path of the real track, normalised to a 100x60 box
+  tmid: number | null; // median temperature it moved through, drives the colour
+}
+
+// The animal's own track, drawn small. Two strokes: a wide translucent one for the
+// glow the site uses everywhere, and a crisp one on top.
+function Spark({ d, t }: { d: string; t: number | null }) {
+  if (!d) return null;
+  return (
+    <svg className="spark" viewBox="0 0 100 60" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+      <path d={d} fill="none" stroke={tcol(t, 0.22)} strokeWidth={4} strokeLinecap="round" strokeLinejoin="round" />
+      <path d={d} fill="none" stroke={tcol(t, 0.95)} strokeWidth={1.3} strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
 }
 const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 const label = (r: Row) => r.common || r.sci;
@@ -76,18 +91,14 @@ export default function ExploreList({ journeys }: { journeys: Row[] }) {
         {shown.length} {shown.length === 1 ? "species" : "species"}
       </p>
 
-      <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(15rem,1fr))", gap: "1px", background: "var(--rule)", border: "1px solid var(--rule)" }}>
+      <ul className="grid">
         {shown.map((r) => (
           <li key={r.slug}>
-            <Link
-              href={`/journey/${r.slug}`}
-              style={{ display: "flex", flexDirection: "column", gap: ".25rem", background: "var(--deep)", padding: "1rem 1.1rem", textDecoration: "none", color: "var(--text)", height: "100%" }}
-            >
-              <span style={{ fontFamily: "var(--display)", fontSize: "1.05rem", lineHeight: 1.2 }}>{cap(label(r))}</span>
-              {r.common ? <span style={{ fontStyle: "italic", fontFamily: "var(--display)", fontSize: ".82rem", color: "var(--muted)" }}>{r.sci}</span> : null}
-              <span style={{ fontFamily: "var(--mono)", fontVariantNumeric: "tabular-nums", fontSize: ".8rem", color: "var(--warm)", marginTop: ".2rem" }}>
-                {r.km.toLocaleString("en-US")} km
-              </span>
+            <Link href={`/journey/${r.slug}`} className="card">
+              <Spark d={r.spark} t={r.tmid} />
+              <span className="cardName">{cap(label(r))}</span>
+              {r.common ? <span className="cardSci">{r.sci}</span> : null}
+              <span className="cardKm">{r.km.toLocaleString("en-US")} km</span>
             </Link>
           </li>
         ))}

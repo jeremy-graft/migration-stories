@@ -15,6 +15,8 @@ export interface JourneyMeta {
   fixes: number;
   band: number | null;
   license: string; // CC0_1_0 | CC_BY_4_0 | CC_BY_NC_4_0 | OTHER
+  spark: string; // SVG path of the real track, normalised to a 100x60 box
+  tmid: number | null; // median temperature experienced, drives the card colour
 }
 export interface JourneyDetail extends JourneyMeta {
   note: string;
