@@ -1,6 +1,6 @@
 // db/schema.ts
 import {
-  pgTable, uuid, text, timestamp, doublePrecision,
+  pgTable, uuid, text, timestamp, doublePrecision, real,
   boolean, integer, bigserial, jsonb, pgEnum, index,
 } from "drizzle-orm/pg-core";
 
@@ -8,7 +8,7 @@ export const licenseEnum = pgEnum("license", [
   "CC0_1_0", "CC_BY_4_0", "CC_BY_NC_4_0", "OTHER",
 ]);
 
-export const sourceEnum = pgEnum("source", ["gbif", "movebank_repo", "movebank_direct", "zenodo", "ocearch"]);
+export const sourceEnum = pgEnum("source", ["gbif", "movebank_repo", "movebank_direct", "zenodo", "ocearch", "atn", "usgs", "pangaea"]);
 
 export const datasets = pgTable("datasets", {
   id: text("id").primaryKey(),              // gbif datasetKey or movebank study id, prefixed by source
@@ -52,8 +52,29 @@ export const trackPoints = pgTable("track_points", {
   lon: doublePrecision("lon").notNull(),
   lat: doublePrecision("lat").notNull(),
   visible: boolean("visible").default(true), // false = flagged outlier
+  elevation: real("elevation"),              // env: ETOPO1 relief (m); <0 = ocean depth
 }, (t) => ({
   byIndividualTs: index("track_points_individual_ts_idx").on(t.individualId, t.ts),
+}));
+
+// Species-level range-shift records (decades-of-change layer, e.g. BioShifts).
+// One row per measured shift; joined to individuals by scientific_name.
+export const speciesShifts = pgTable("species_shifts", {
+  id: bigserial("id", { mode: "number" }).primaryKey(),
+  scientificName: text("scientific_name").notNull(),
+  taxClass: text("class"),                  // taxonomic class (Aves, Mammalia, …)
+  gradient: text("gradient"),               // Latitudinal | Elevation
+  position: text("position"),               // Leading edge | Trailing edge | Optimum (centroid)
+  shiftRate: doublePrecision("shift_rate"), // rate of movement
+  unit: text("unit"),                       // km/year, m/year
+  ecosystem: text("ecosystem"),             // Terrestrial | Marine
+  hemisphere: text("hemisphere"),
+  startYear: integer("start_year"),
+  quality: text("quality"),
+  source: text("source"),                   // bioshifts
+  reference: text("reference"),
+}, (t) => ({
+  bySpecies: index("species_shifts_name_idx").on(t.scientificName),
 }));
 
 export const stories = pgTable("stories", {

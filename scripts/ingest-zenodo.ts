@@ -11,6 +11,9 @@ import { fileURLToPath } from "node:url";
 import { ingestTracks, type IndividualInput } from "../lib/ingest";
 import { normalizeLicense, isCommercialSafe, type License } from "../lib/licenses";
 import type { RawPoint } from "../lib/track";
+import {
+  parseDelimited, detectDelim, detectColumns, trackiness, speciesFromText, validSpecies, toNum, normalizeTs,
+} from "../lib/csv-tracks";
 
 const MAX_FILE_BYTES = 40 * 1024 * 1024; // skip files bigger than 40 MB for now
 // Many relevance-ranked queries cover far more of Zenodo's ~18k tracking
@@ -33,74 +36,10 @@ const ATT_FILE = fileURLToPath(new URL("../zenodo-attempted.json", import.meta.u
 const loadAttempted = (): Set<number> => { try { return new Set(JSON.parse(readFileSync(ATT_FILE, "utf8"))); } catch { return new Set(); } };
 const saveAttempted = (s: Set<number>) => { try { writeFileSync(ATT_FILE, JSON.stringify([...s])); } catch { /* ignore */ } };
 
-// ---- fuzzy CSV parsing -------------------------------------------------------
-function parseDelimited(text: string, delim: string): string[][] {
-  const rows: string[][] = [];
-  let field = "", row: string[] = [], inQ = false;
-  for (let i = 0; i < text.length; i++) {
-    const c = text[i];
-    if (inQ) {
-      if (c === '"') { if (text[i + 1] === '"') { field += '"'; i++; } else inQ = false; }
-      else field += c;
-    } else if (c === '"') inQ = true;
-    else if (c === delim) { row.push(field); field = ""; }
-    else if (c === "\n") { row.push(field); rows.push(row); row = []; field = ""; }
-    else if (c !== "\r") field += c;
-  }
-  if (field.length || row.length) { row.push(field); rows.push(row); }
-  return rows;
-}
-
-function detectDelim(headerLine: string): string {
-  const counts = [",", "\t", ";"].map((d) => [d, headerLine.split(d).length] as const);
-  return counts.sort((a, b) => b[1] - a[1])[0][0];
-}
-
-const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, "");
-function findCol(header: string[], match: (n: string) => boolean): number {
-  return header.findIndex((h) => match(norm(h)));
-}
-function detectColumns(header: string[]) {
-  const lat = findCol(header, (n) => /^(decimal)?lat(itude)?$/.test(n) || n === "locationlat" || n === "ylat" || n === "gpslatitude");
-  const lon = findCol(header, (n) => /^(decimal)?lon(g)?(itude)?$/.test(n) || n === "locationlong" || n === "lng" || n === "gpslongitude");
-  // time: exact good names first, then any column containing "date"/"time".
-  let time = findCol(header, (n) => ["timestamp", "datetime", "eventdate", "date", "time", "studylocaltimestamp", "gpstime", "acquisitiontime", "dateloc", "datetimeutc"].includes(n));
-  if (time < 0) time = findCol(header, (n) => (n.includes("date") || n.includes("time")) && !n.includes("update"));
-  let id = findCol(header, (n) => ["individuallocalidentifier", "individualid", "individual", "animalid", "animal", "tagid", "taglocalidentifier", "tag", "organismid", "organism", "trackid", "birdid", "deployid", "deployment"].includes(n));
-  if (id < 0) id = findCol(header, (n) => n.endsWith("id") || n === "name" || n.includes("identifier"));
-  const sci = findCol(header, (n) => ["species", "scientificname", "taxon", "taxoncanonicalname", "individualtaxoncanonicalname"].includes(n));
-  return { lat, lon, time, id, sci };
-}
-
-// binomial in title/keywords as a species fallback (e.g. "Aquila chrysaetos")
-function speciesFromText(...texts: (string | undefined)[]): string | undefined {
-  for (const t of texts) {
-    const m = (t || "").match(/\b([A-Z][a-z]{2,})\s([a-z]{3,})\b/);
-    if (m && !/^(The|This|Data|GPS|And|For|With|From)$/.test(m[1])) return `${m[1]} ${m[2]}`;
-  }
-  return undefined;
-}
-
 async function fetchJson(url: string): Promise<any> {
   const r = await fetch(url, { headers: { "User-Agent": "migration-stories/0.1" }, signal: AbortSignal.timeout(40000) });
   if (!r.ok) throw new Error(`zenodo ${r.status}`);
   return r.json();
-}
-
-// Validate a candidate species name against GBIF's backbone so junk like
-// "Random walk" / "Range for" / "LEYE" doesn't pollute the species count.
-const speciesCache = new Map<string, string | null>();
-async function validSpecies(name?: string): Promise<string | undefined> {
-  const key = (name || "").trim();
-  if (!key || key.length < 4) return undefined;
-  if (speciesCache.has(key)) return speciesCache.get(key) ?? undefined;
-  let val: string | null = null;
-  try {
-    const m = await (await fetch(`https://api.gbif.org/v1/species/match?name=${encodeURIComponent(key)}`, { signal: AbortSignal.timeout(15000) })).json();
-    if (m && m.matchType !== "NONE" && (m.rank === "SPECIES" || m.rank === "SUBSPECIES" || m.species)) val = m.species || m.scientificName || key;
-  } catch { /* leave null */ }
-  speciesCache.set(key, val);
-  return val ?? undefined;
 }
 
 interface ZRecord { id: number; metadata: any; files?: Array<{ key: string; size: number; links: { self: string } }> }
@@ -134,12 +73,12 @@ async function ingestRecord(rec: ZRecord): Promise<{ individuals: number; points
       const byInd = new Map<string, { sci?: string; points: RawPoint[] }>();
       for (let i = 1; i < rows.length; i++) {
         const r = rows[i];
-        const lat = Number(r[col.lat]), lon = Number(r[col.lon]);
+        const lat = toNum(r[col.lat]), lon = toNum(r[col.lon]);
         if (!Number.isFinite(lat) || !Number.isFinite(lon)) continue;
         const indId = (col.id >= 0 ? r[col.id] : "") || "ALL";
         let e = byInd.get(indId);
         if (!e) { e = { sci: col.sci >= 0 ? r[col.sci] : undefined, points: [] }; byInd.set(indId, e); }
-        e.points.push({ ts: r[col.time], lon, lat });
+        e.points.push({ ts: normalizeTs(r[col.time], col.time2 >= 0 ? r[col.time2] : undefined), lon, lat });
       }
       if (!byInd.size) continue;
 
@@ -159,9 +98,6 @@ async function ingestRecord(rec: ZRecord): Promise<{ individuals: number; points
   return null;
 }
 
-function trackiness(name: string): number {
-  return /track|gps|telemetr|argos|movement|reloc|location|\bfix/i.test(name) ? 1 : 0;
-}
 
 async function main() {
   const limit = Number(process.argv[2] || 500);          // max NEW datasets to ingest this run

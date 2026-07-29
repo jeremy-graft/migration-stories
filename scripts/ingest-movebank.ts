@@ -38,13 +38,17 @@ function parseCSV(text: string): string[][] {
 interface Study { id: string; name: string; license: string; taxa: string[]; locs: number }
 
 function loadOpenGpsStudies(path: string): Study[] {
+  // CC0/CC-BY are always in. CC-BY-NC only when ALLOW_NC=true — and even then it
+  // is tagged CC_BY_NC_4_0 in the DB so the commercial build can wall it off.
+  const allowNc = process.env.ALLOW_NC === "true";
+  const okLicense = (lic: string) => lic === "CC_0" || lic === "CC_BY" || (allowNc && lic === "CC_BY_NC");
   const rows = parseCSV(readFileSync(path, "utf8"));
   const h = rows[0]; const ci = (n: string) => h.indexOf(n);
   const out: Study[] = [];
   for (const r of rows.slice(1)) {
     if (r.length < h.length) continue;
     const lic = r[ci("license_type")];
-    if (lic !== "CC_0" && lic !== "CC_BY") continue;
+    if (!okLicense(lic)) continue;
     if (Number(r[ci("number_of_deployed_locations")] || 0) <= 0) continue;
     if (!/gps|argos/i.test(r[ci("sensor_type_ids")] || "")) continue;
     out.push({
