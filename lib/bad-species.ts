@@ -33,3 +33,26 @@ export const BAD_INDIVIDUALS = new Set([
   "6c86ab8d-c60e-4b48-b93b-9e324b160314", // Pusa hispida "60485" — mean lat -80.1°, 94 pts
   "48e87164-8c7d-460e-bf92-68b562dc5f8c", // Pusa hispida "60486" — mean lat -79.8°, 74 pts
 ]);
+
+// "scientific_name" values that are NOT a species: some source records were only
+// identified to genus or family level, and that coarser label flowed straight
+// through ingestion as if it were a binomial (e.g. "Larus" -> gulls, plural,
+// covering species we ALSO hold individually). Caught while building the
+// per-species catalog (2026-07-29): a one-word "species" entry is always this,
+// plus one literal ingestion artifact ("calibration", a test/calibration record).
+export const NON_SPECIES = new Set([
+  "Ardeidae", "Balaenoptera", "Rallus", "Elephantidae", "Falco", "Globicephala",
+  "Larus", "Mobula", "Testudinidae", "Chelonoidis", "Anatidae", "Procyon",
+  "Didelphis", "calibration",
+]);
+
+// Taxonomic-synonym duplicates: the SAME animal ingested under two different
+// scientific names (an old genus + its current reclassification), so it would
+// otherwise appear TWICE in a per-species catalog. Keep whichever name has the
+// richer track data; drop the other here.
+export const SYNONYM_DUPLICATES = new Set([
+  "Spatula discors",         // richer data under the older name: Anas discors
+  "Aphriza virgata",         // richer data under: Calidris virgata
+  "Calidris subruficollis",  // richer data under: Tryngites subruficollis
+  "Pekania pennanti",        // near-identical either way; kept: Martes pennanti
+]);

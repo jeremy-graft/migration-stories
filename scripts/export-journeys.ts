@@ -9,7 +9,7 @@ import { createReadStream, readFileSync, writeFileSync, mkdirSync } from "node:f
 import { createInterface } from "node:readline";
 import { fileURLToPath } from "node:url";
 import { existsSync } from "node:fs";
-import { BAD_SPECIES, BAD_INDIVIDUALS } from "../lib/bad-species";
+import { BAD_SPECIES, BAD_INDIVIDUALS, NON_SPECIES, SYNONYM_DUPLICATES } from "../lib/bad-species";
 import { slugify } from "../lib/earth-math";
 
 const R = (p: string) => fileURLToPath(new URL(`../${p}`, import.meta.url));
@@ -53,7 +53,7 @@ async function main() {
     const c = splitCsv(clean[i]);
     if (c[iElig] !== "t") continue;
     const sci = c[iSci];
-    if (BAD_SPECIES.has(sci) || BAD_INDIVIDUALS.has(c[iId])) continue;
+    if (BAD_SPECIES.has(sci) || BAD_INDIVIDUALS.has(c[iId]) || NON_SPECIES.has(sci) || SYNONYM_DUPLICATES.has(sci)) continue;
     const km = +c[iKm];
     const cur = best.get(sci);
     if (!cur || km > cur.km)
