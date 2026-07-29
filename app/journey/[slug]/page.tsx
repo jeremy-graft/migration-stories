@@ -17,9 +17,9 @@ const human = (s: string) => s.replace(/\s*[—–]\s*/g, ", ");
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
   const j = journeyBySlug(slug);
-  if (!j) return { title: "Journey — Where Animals Go" };
+  if (!j) return { title: "Journey · Where Animals Go" };
   return {
-    title: `${cap(displayName(j))} — Where Animals Go`,
+    title: `${cap(displayName(j))} · Where Animals Go`,
     description: `${cap(human(j.note))}. ${j.km.toLocaleString("en-US")} km tracked across ${j.days.toLocaleString("en-US")} days.`,
   };
 }

@@ -4,7 +4,7 @@ import { allJourneys } from "@/lib/journeys";
 import ExploreList from "@/components/ExploreList";
 
 export const metadata: Metadata = {
-  title: "Explore every species — Where Animals Go",
+  title: "Explore every species · Where Animals Go",
   description:
     "Browse every animal we can follow: one real tracked individual per species, from open animal-tracking data.",
 };

@@ -84,7 +84,7 @@ const html = `<title>What We Know About Where Animals Go</title>
   <span class="label">Open animal-tracking corpus &middot; ${F.corpus.yearFrom}&ndash;${F.corpus.yearTo}</span>
   <h1>What we know about<br>where animals go</h1>
   <p class="lede">A global movement corpus assembled from every openly-licensed tracking
-     repository we could reach &mdash; and an honest account of the questions it can, and
+     repository we could reach, and an honest account of the questions it can, and
      provably cannot, answer.</p>
   <div class="strip">
     <div class="stat"><b>${n(F.corpus.species)}</b><span class="label">species</span></div>
@@ -136,7 +136,7 @@ const html = `<title>What We Know About Where Animals Go</title>
   <div class="find">
     <div class="meta"><h3>Isotherm-following is universal. Circumnavigation is not.</h3>
       <span class="conf c-strong">strong</span></div>
-    <p class="prose">Animals ride narrow temperature bands at every latitude &mdash; but only the
+    <p class="prose">Animals ride narrow temperature bands at every latitude, but only the
        Southern Ocean&rsquo;s unbroken circumpolar current lets one ride a band the whole way around
        the world. In the north, continents cut the highway short.</p>
     <div class="scroll"><table>
@@ -155,13 +155,13 @@ const html = `<title>What We Know About Where Animals Go</title>
   </div>
 
   <div class="find">
-    <div class="meta"><h3>The white stork is arriving earlier &mdash; but not because of warmth.</h3>
+    <div class="meta"><h3>The white stork is arriving earlier, but not because of warmth.</h3>
       <span class="conf c-strong">strong</span></div>
     <p class="prose">Our best-sampled species (24 years, 498 animal-years) advances its spring
        migration by <span class="num">&minus;2.3</span> days per decade, matching the published
        literature. Yet its arrival has <em>no</em> relationship to spring temperature on its breeding
        grounds: <span class="num">r&nbsp;=&nbsp;&minus;0.03</span>. That is flat, not weak. A
-       climate-shaped trend with a non-thermal cause &mdash; and this corpus cannot say which one.
+       climate-shaped trend with a non-thermal cause, and this corpus cannot say which one.
        Of nine species tested, only the lesser black-backed gull showed a clear thermal response
        (<span class="num">&minus;3.4 days/&deg;C</span>).</p>
   </div>
@@ -169,7 +169,7 @@ const html = `<title>What We Know About Where Animals Go</title>
   <div class="find">
     <div class="meta"><h3>The planet has two different migration rhythms.</h3>
       <span class="conf c-strong">solid</span></div>
-    <p class="prose">Northern-hemisphere animals show the textbook double pulse &mdash; a spring surge
+    <p class="prose">Northern-hemisphere animals show the textbook double pulse, a spring surge
        (March&ndash;May) and a larger autumn one (September&ndash;October, ~<span class="num">20</span>
        km/day), with lulls for midsummer breeding and deep winter. Southern-hemisphere animals show
        no seasonal pulse at all: a steady <span class="num">30&ndash;40</span> km/day year-round,
@@ -194,12 +194,12 @@ const html = `<title>What We Know About Where Animals Go</title>
   <span class="label">Limits</span>
   <h2>What this corpus provably cannot answer</h2>
   <p class="prose">This is the unusual part, and the reason to trust anything above it. Each limit
-     below was learned by being refuted &mdash; a confident result that fell apart under checking.</p>
+     below was learned by being refuted, a confident result that fell apart under checking.</p>
   <div class="limits">
     <div class="limit">
       <h3>Cross-species geography is a map of research funding</h3>
       <p class="prose">Asked where the planet&rsquo;s migration converges, the corpus answers
-         &ldquo;Belgium&rdquo; &mdash; the home institute of its single largest data source. Three
+         &ldquo;Belgium,&rdquo; the home institute of its single largest data source. Three
          separate methods (hotspots, co-occurrence, network centrality) each rediscovered the funders
          rather than the biology. Betweenness centrality was worse than useless: one cell scored
          <span class="num">1.1M</span> while containing a single species, because the metric rewards
@@ -208,7 +208,7 @@ const html = `<title>What We Know About Where Animals Go</title>
     <div class="limit">
       <h3>A trend is only visible if it beats the spread between individuals</h3>
       <p class="prose">Same species, same years, opposite outcomes. Arrival <em>date</em> varies about
-         13 days between storks, and the trend is ~5.5 days over 24 years &mdash; marginal, but
+         13 days between storks, and the trend is ~5.5 days over 24 years, marginal but
          detectable. Wintering <em>latitude</em> varies by <span class="num">70&deg;</span> between
          individuals, so a 1&ndash;3&deg;/decade shift is permanently invisible. Not biology.
          Variance.</p>

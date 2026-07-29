@@ -115,8 +115,8 @@ const html = `<title>Where Animals Go</title>
     <span class="label">${n(W.corpus.species)} species &middot; ${n(W.corpus.eligible)} animals &middot; ${W.corpus.yearFrom}&ndash;${W.corpus.yearTo}</span>
     <h1>Where<br>animals go</h1>
     <p class="prose">Every dot is land, tinted by its temperature that month. Every line is an animal
-       that was really there. Watch the world breathe through the seasons while the animal moves &mdash;
-       the ocean-wanderers keep the same colour the whole way around.</p>
+       that was really there. Watch the world breathe through the seasons while the animal moves,
+       and notice how the ocean-wanderers keep the same colour the whole way around.</p>
     <div class="ribbon">
       <div class="ribHead"><span class="label">temperature it&rsquo;s moving through</span><b id="ribNow">&mdash;</b></div>
       <canvas id="ribbon"></canvas>
@@ -137,7 +137,7 @@ const html = `<title>Where Animals Go</title>
       <span class="label">Finding 01 &middot; thermal niche</span>
       <h2>Some animals cross the planet without ever leaving their temperature</h2>
       <p class="prose">A sooty tern covers 160&deg; of longitude inside a band just
-         <span class="mono">3.4&deg;C</span> wide. It isn&rsquo;t wandering the map &mdash; it is
+         <span class="mono">3.4&deg;C</span> wide. It isn&rsquo;t wandering the map, it is
          following the water. Land-breeding migrants do the opposite: the bar-tailed godwit travels
          just as far, but punches straight through <span class="mono">19.6&deg;C</span> of thermal
          range, from Arctic tundra to tropical coast.</p>
@@ -155,7 +155,7 @@ const html = `<title>Where Animals Go</title>
       <h2>A map of where nobody has ever watched</h2>
       <p class="prose">Colour is how many species have been tracked through each 5&deg; cell.
          Grey is land where no tracked animal has ever been recorded. This is not a map of
-         animals &mdash; it is a map of where science has pointed its antennas.</p>
+         animals, it is a map of where science has pointed its antennas.</p>
     </div>
     <div class="plate"><canvas id="ign"></canvas></div>
     <div class="legend">
@@ -168,7 +168,7 @@ const html = `<title>Where Animals Go</title>
     <p class="prose" style="margin-top:1.6rem">Coverage flatters us. A 5&deg; cell is 550&nbsp;km
        across, so one stork crossing the Sahara once makes it look studied. Measured by intensity,
        a typical tropical cell holds <span class="mono">381</span> fixes against the subtropics&rsquo;
-       <span class="mono">1,287</span> &mdash; and polar land holds a median of
+       <span class="mono">1,287</span>, and polar land holds a median of just
        <span class="mono">one species</span> and <span class="mono">eleven</span> fixes.</p>
   </div>
 </section>
@@ -178,13 +178,13 @@ const html = `<title>Where Animals Go</title>
     <div class="head">
       <span class="label">What it can&rsquo;t tell us</span>
       <h2>The limits are the point</h2>
-      <p class="prose">Every limit below was learned by being refuted &mdash; a confident result that
+      <p class="prose">Every limit below was learned by being refuted, a confident result that
          fell apart under checking. They are the reason to trust the findings above them.</p>
     </div>
     <div class="cards">
       <div class="card">
         <h3>Geography is funding</h3>
-        <p>Asked where migration converges, the corpus answers &ldquo;Belgium&rdquo; &mdash; the home
+        <p>Asked where migration converges, the corpus answers &ldquo;Belgium,&rdquo; the home
            of its largest data source. Three methods each rediscovered the funders, not the biology.</p>
       </div>
       <div class="card">
@@ -204,7 +204,7 @@ const html = `<title>Where Animals Go</title>
 
 <footer><div class="wrap" style="display:flex;flex-direction:column;gap:.7rem">
   <p><span class="label">Sources</span> GBIF &middot; Movebank &middot; Zenodo &middot; Dryad &middot;
-     NOAA/IOOS Animal Telemetry Network &middot; USGS ScienceBase &middot; PANGAEA &mdash; openly
+     NOAA/IOOS Animal Telemetry Network &middot; USGS ScienceBase &middot; PANGAEA, all openly
      licensed (CC0 / CC&nbsp;BY) only.</p>
   <p><span class="label">Environment</span> ETOPO1 relief &middot; ERA5 temperature via Open-Meteo.</p>
 </div></footer>

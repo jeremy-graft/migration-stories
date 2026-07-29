@@ -5,7 +5,7 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "Where Animals Go",
   description:
-    "A dot-matrix Earth that breathes through the seasons, traced by real animal migrations — built from open, openly-licensed tracking data.",
+    "A dot-matrix Earth that breathes through the seasons, traced by real animal migrations, built from open, openly-licensed tracking data.",
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
