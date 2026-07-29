@@ -2,8 +2,12 @@
 // link looks like the site instead of a blank card.
 //   public/icon.svg       — favicon: the albatross loop, minimal
 //   public/og.svg + .png  — 1200x630 link preview: dot-matrix Earth + the track
-// SVG is written by hand (no deps); the PNG is rasterised via sharp if available,
-// since most social scrapers will not render an SVG card.
+// SVG is written by hand (no deps); the PNG is rasterised via sharp IF INSTALLED
+// (`pnpm add -D sharp`, then remove it again once you've regenerated og.png).
+// sharp is NOT a committed dependency — it needs a native binary per platform,
+// which is unnecessary risk in the deploy's install step for a script that only
+// ever runs locally and once in a while. Its output (og.png) is committed as a
+// plain static file, so the live site never needs sharp itself.
 import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
