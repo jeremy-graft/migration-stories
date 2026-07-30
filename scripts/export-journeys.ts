@@ -57,6 +57,14 @@ function splitCsv(l: string): string[] {
 }
 const n = (x: number) => x.toLocaleString("en-US");
 
+/** great-circle km between two fixes, for "did it end up back where it started" */
+function haversine(la1: number, lo1: number, la2: number, lo2: number): number {
+  const r = Math.PI / 180, R = 6371;
+  const dLa = (la2 - la1) * r, dLo = (lo2 - lo1) * r;
+  const a = Math.sin(dLa / 2) ** 2 + Math.cos(la1 * r) * Math.cos(la2 * r) * Math.sin(dLo / 2) ** 2;
+  return 2 * R * Math.asin(Math.min(1, Math.sqrt(a)));
+}
+
 // curated notes for the flagships (others get a factual one); keep them human.
 const CURATED: Record<string, string> = {
   "Diomedea exulans": "362,017 km, roughly the distance to the Moon",
@@ -155,6 +163,18 @@ async function main() {
     const lonSpan = Math.max(0, 360 - maxGap);
     const lonC = (((gapAt + maxGap + lonSpan / 2) + 540) % 360) - 180;
 
+    // ---- facts the journey page can state honestly, all derived, none invented ----
+    // Latitude reach uses the robust p1/p99 from the canonical table, not min/max
+    // (a single bad fix would otherwise stretch the range).
+    const tLo = temps.length ? temps[Math.floor(temps.length * 0.05)] : null;
+    const tHi = temps.length ? temps[Math.floor(temps.length * 0.95)] : null;
+    // did it come back? distance between the first and last real fix
+    const endGapKm = Math.round(haversine(P[0].la, P[0].lo, P[P.length - 1].la, P[P.length - 1].lo));
+    // equator crossings: sign changes in latitude along the track
+    let crossings = 0;
+    for (let k = 1; k < lats.length; k++) if ((lats[k - 1] < 0) !== (lats[k] < 0)) crossings++;
+    const kmPerDay = b.days > 0 ? +(b.km / b.days).toFixed(1) : null;
+
     const slug = slugify(b.sci);
     const common = (meta[b.sci]?.common || "").trim();
     const group = meta[b.sci]?.group || "Other";
@@ -167,6 +187,7 @@ async function main() {
 
     writeFileSync(R(`public/data/journey/${slug}.json`), JSON.stringify({
       slug, sci: b.sci, common, group, note, km, days, fixes: P.length, band, attrib,
+      latLo: +b.latLo.toFixed(1), latHi: +b.latHi.toFixed(1), tLo, tHi, kmPerDay, endGapKm, crossings,
       cam: { lon: +lonC.toFixed(1), lat: +latC.toFixed(1), lonSpan: Math.round(lonSpan), latSpan: Math.round(latSpan) },
       start: Math.round(P[0].t / 86400000), end: Math.round(P[P.length - 1].t / 86400000), pts,
     }));

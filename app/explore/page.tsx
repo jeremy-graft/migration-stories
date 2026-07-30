@@ -13,19 +13,15 @@ export const metadata: Metadata = {
 export default function ExplorePage() {
   const journeys = allJourneys();
   return (
-    <main style={{ maxWidth: "72rem", margin: "0 auto", padding: "clamp(1.5rem,4vw,3rem)" }}>
+    <main className="page page--wide">
       <Link href="/" className="backLink">
         &larr; Where animals go
       </Link>
 
-      <header style={{ margin: "1.6rem 0 2rem", maxWidth: "42rem" }}>
-        <p style={{ fontFamily: "var(--mono)", fontSize: ".68rem", letterSpacing: ".18em", textTransform: "uppercase", color: "var(--muted)", margin: 0 }}>
-          The catalog
-        </p>
-        <h1 style={{ fontFamily: "var(--display)", fontWeight: 600, fontSize: "clamp(2rem,5.5vw,3.4rem)", lineHeight: 1.03, letterSpacing: "-.02em", margin: ".4rem 0 .6rem" }}>
-          Every animal we can follow
-        </h1>
-        <p style={{ fontSize: "1.05rem", color: "#b9cfd4", margin: 0 }}>
+      <header className="pageHead" style={{ maxWidth: "42rem" }}>
+        <p className="eyebrow">The catalog</p>
+        <h1 className="pageTitle">Every animal we can follow</h1>
+        <p className="lede" style={{ marginTop: ".6rem" }}>
           {journeys.length} species, each shown through one real tracked individual, its longest clean journey.
           Every line is an animal that was really there.
         </p>

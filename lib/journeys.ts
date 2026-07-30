@@ -20,6 +20,14 @@ export interface JourneyMeta {
 }
 export interface JourneyDetail extends JourneyMeta {
   note: string;
+  // derived facts the journey page states in prose (all computed, never invented)
+  latLo: number;
+  latHi: number;
+  tLo: number | null;
+  tHi: number | null;
+  kmPerDay: number | null;
+  endGapKm: number | null;
+  crossings: number;
   attrib: {
     source: string;
     title: string;

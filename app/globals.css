@@ -98,6 +98,146 @@ a {
   }
 }
 
+/* ---------- page chrome shared by every non-hero page ----------
+   These replace the ad-hoc inline style objects the subpages used to carry, so the
+   journey / explore / findings pages read as one instrument rather than three
+   documents that happen to share colours. */
+.page {
+  max-width: 64rem;
+  margin: 0 auto;
+  padding: clamp(1.5rem, 4vw, 3rem);
+}
+/* the catalog needs more room for its grid than a reading column does */
+.page--wide {
+  max-width: 72rem;
+}
+.pageHead {
+  margin: 1.6rem 0 1.4rem;
+}
+.eyebrow {
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 0;
+}
+.pageTitle {
+  font-family: var(--display);
+  font-weight: 600;
+  font-size: clamp(2rem, 5.5vw, 3.4rem);
+  line-height: 1.03;
+  letter-spacing: -0.02em;
+  margin: 0.4rem 0 0.3rem;
+}
+.pageSci {
+  font-style: italic;
+  font-family: var(--display);
+  font-size: 1.15rem;
+  color: var(--muted);
+  margin: 0;
+}
+.lede {
+  max-width: 38rem;
+  margin-top: 1.7rem;
+  font-size: 1.05rem;
+  color: #b9cfd4;
+}
+
+/* stat row */
+.statRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: clamp(1.2rem, 4vw, 3rem);
+  border-top: 1px solid var(--rule);
+  margin-top: 1.6rem;
+  padding-top: 1.3rem;
+}
+.statV {
+  display: block;
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  font-size: clamp(1.2rem, 2.6vw, 1.7rem);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+.statK {
+  font-family: var(--mono);
+  font-size: 0.66rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* the derived-facts block: every sentence computed from this animal's own track */
+.story {
+  margin-top: 2rem;
+  padding-top: 1.2rem;
+  border-top: 1px solid var(--rule);
+  max-width: 38rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+.story p {
+  margin: 0;
+  color: #b9cfd4;
+}
+
+/* related-journeys list */
+.related {
+  border-top: 1px solid var(--rule);
+  margin-top: 2.5rem;
+  padding-top: 1.3rem;
+}
+.relatedHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1rem;
+  margin: 0 0 0.8rem;
+}
+.moreLink {
+  font-family: var(--mono);
+  font-size: 0.66rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--cold);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.rows {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 1px;
+  background: var(--rule);
+  border: 1px solid var(--rule);
+}
+.row {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  background: var(--deep);
+  padding: 1rem 1.2rem;
+  text-decoration: none;
+  color: var(--text);
+  transition: background 0.18s;
+}
+.row:hover {
+  background: var(--panel);
+}
+.rowName {
+  font-family: var(--display);
+}
+.rowNum {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--warm);
+  white-space: nowrap;
+}
+
 /* ---------- provenance ----------
    Credit is a CC BY obligation, not a courtesy, and showing the source is also
    how this project earns trust. Styled as part of the instrument, not fine print. */
@@ -147,6 +287,67 @@ a {
 }
 .licBadge--nc {
   color: var(--warm);
+}
+
+/* ---------- catalog filters ---------- */
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+  align-items: center;
+  margin-bottom: 1.4rem;
+}
+.search {
+  flex: 1 1 14rem;
+  min-width: 0;
+  background: var(--deep);
+  color: var(--text);
+  border: 1px solid var(--rule);
+  padding: 0.6rem 0.8rem;
+  font-family: var(--body);
+  font-size: 1rem;
+}
+.search:focus {
+  border-color: var(--cold);
+  outline: none;
+}
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+.chip {
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+  padding: 0.42rem 0.7rem;
+  border: 1px solid var(--rule);
+  background: transparent;
+  color: var(--muted);
+  transition: color 0.18s, border-color 0.18s, background 0.18s;
+}
+.chip:hover {
+  color: var(--text);
+  border-color: var(--cold);
+}
+.chip[aria-pressed="true"] {
+  background: var(--cold);
+  border-color: var(--cold);
+  color: var(--void);
+}
+.resultCount {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 0 0 1rem;
+}
+.empty {
+  color: var(--muted);
+  margin-top: 1.5rem;
 }
 
 /* ---------- catalog grid ----------

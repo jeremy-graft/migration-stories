@@ -54,42 +54,25 @@ export default function ExploreList({ journeys }: { journeys: Row[] }) {
 
   return (
     <div>
-      <div style={{ display: "flex", flexWrap: "wrap", gap: ".7rem", alignItems: "center", marginBottom: "1.4rem" }}>
+      <div className="filters">
         <input
+          className="search"
           value={q}
           onChange={(e) => setQ(e.target.value)}
           placeholder="Search species…"
           aria-label="Search species"
-          style={{
-            flex: "1 1 14rem", minWidth: 0, background: "var(--deep)", color: "var(--text)",
-            border: "1px solid var(--rule)", padding: ".6rem .8rem", fontFamily: "var(--body)", fontSize: "1rem",
-          }}
         />
-        <div style={{ display: "flex", flexWrap: "wrap", gap: ".4rem" }}>
-          {GROUPS.map((g) => {
-            const on = g === group;
-            return (
-              <button
-                key={g}
-                onClick={() => setGroup(g)}
-                aria-pressed={on}
-                style={{
-                  fontFamily: "var(--mono)", fontSize: ".68rem", letterSpacing: ".06em", textTransform: "uppercase",
-                  cursor: "pointer", padding: ".42rem .7rem", border: "1px solid " + (on ? "var(--cold)" : "var(--rule)"),
-                  background: on ? "var(--cold)" : "transparent", color: on ? "var(--void)" : "var(--muted)",
-                }}
-              >
-                {g}
-                {counts[g] ? ` ${counts[g]}` : ""}
-              </button>
-            );
-          })}
+        <div className="chips">
+          {GROUPS.map((g) => (
+            <button key={g} className="chip" onClick={() => setGroup(g)} aria-pressed={g === group}>
+              {g}
+              {counts[g] ? ` ${counts[g]}` : ""}
+            </button>
+          ))}
         </div>
       </div>
 
-      <p style={{ fontFamily: "var(--mono)", fontSize: ".7rem", letterSpacing: ".1em", textTransform: "uppercase", color: "var(--muted)", margin: "0 0 1rem" }}>
-        {shown.length} {shown.length === 1 ? "species" : "species"}
-      </p>
+      <p className="resultCount">{shown.length} species</p>
 
       <ul className="grid">
         {shown.map((r) => (
@@ -104,9 +87,7 @@ export default function ExploreList({ journeys }: { journeys: Row[] }) {
         ))}
       </ul>
 
-      {shown.length === 0 ? (
-        <p style={{ color: "var(--muted)", marginTop: "1.5rem" }}>No species match &ldquo;{q}&rdquo;.</p>
-      ) : null}
+      {shown.length === 0 ? <p className="empty">No species match &ldquo;{q}&rdquo;.</p> : null}
     </div>
   );
 }
