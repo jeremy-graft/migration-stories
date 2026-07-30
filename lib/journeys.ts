@@ -20,6 +20,8 @@ export interface JourneyMeta {
 }
 export interface JourneyDetail extends JourneyMeta {
   note: string;
+  /** true when positions are displaced because the species is poached or persecuted */
+  blurred?: boolean;
   // derived facts the journey page states in prose (all computed, never invented)
   latLo: number;
   latHi: number;

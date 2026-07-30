@@ -139,6 +139,13 @@ export default async function JourneyPage({ params }: { params: Promise<{ slug: 
         ))}
       </section>
 
+      {j.blurred ? (
+        <p className="maskNote">
+          This species is poached or persecuted, so the positions shown here are shifted by up to 20 km from where
+          the animal really was. The route, its scale and its timing are unchanged; only the exact location is withheld.
+        </p>
+      ) : null}
+
       <Provenance attrib={j.attrib} />
 
       <nav className="related">

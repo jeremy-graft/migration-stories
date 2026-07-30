@@ -8,43 +8,24 @@
     "build": "next build",
     "start": "next start",
     "typecheck": "tsc --noEmit",
-    "db:generate": "drizzle-kit generate",
-    "db:migrate": "drizzle-kit migrate",
-    "db:studio": "drizzle-kit studio",
-    "seed-from-gbif": "tsx scripts/seed-from-gbif.ts",
-    "catalog-gbif": "tsx scripts/catalog-gbif.ts",
-    "catalog-movebank": "tsx scripts/catalog-movebank.ts",
-    "ingest-gbif-batch": "tsx scripts/ingest-gbif-batch.ts",
-    "ingest-movebank-repo": "tsx scripts/ingest-movebank-repo.ts",
-    "build-geojson": "tsx scripts/build-geojson.ts",
-    "thin-existing": "tsx scripts/thin-existing.ts",
     "export-web": "tsx scripts/export-web.ts",
     "build-landing": "tsx scripts/build-landing.ts",
     "gen-hero": "tsx scripts/gen-hero-component.ts",
     "build-hero": "tsx scripts/export-web.ts && tsx scripts/build-landing.ts && tsx scripts/gen-hero-component.ts",
     "build-findings": "tsx scripts/export-findings.ts && tsx scripts/build-report.ts && tsx scripts/gen-report-component.ts",
     "export-journeys": "tsx scripts/export-journeys.ts",
-    "test": "node --import tsx --test tests/licenses.test.ts tests/track.test.ts tests/gbif-predicate.test.ts tests/movebank.test.ts"
+    "test": "node --import tsx --test tests/licenses.test.ts"
   },
   "dependencies": {
-    "@electric-sql/pglite": "^0.5.3",
-    "@neondatabase/serverless": "^0.10.4",
-    "@turf/turf": "^7.2.0",
-    "drizzle-orm": "^0.38.3",
-    "maplibre-gl": "^4.7.1",
-    "next": "^15.1.3",
+    "next": "^15.5.22",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0",
-    "seek-bzip": "^2.0.0",
-    "unzipper": "^0.12.5"
+    "react-dom": "^19.0.0"
   },
   "devDependencies": {
     "@types/node": "^22.10.5",
     "@types/react": "^19.0.2",
     "@types/react-dom": "^19.0.2",
-    "@types/unzipper": "^0.10.11",
     "dotenv": "^16.4.7",
-    "drizzle-kit": "^0.30.1",
     "tsx": "^4.19.2",
     "typescript": "^5.7.2"
   }

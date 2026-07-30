@@ -238,6 +238,17 @@ a {
   white-space: nowrap;
 }
 
+/* disclosure shown on journeys whose positions are deliberately displaced */
+.maskNote {
+  margin: 1.6rem 0 0;
+  padding: 0.8rem 1rem;
+  border-left: 2px solid var(--warm);
+  background: rgba(255, 178, 77, 0.05);
+  max-width: 38rem;
+  font-size: 0.9rem;
+  color: #b9cfd4;
+}
+
 /* ---------- provenance ----------
    Credit is a CC BY obligation, not a courtesy, and showing the source is also
    how this project earns trust. Styled as part of the instrument, not fine print. */

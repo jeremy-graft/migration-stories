@@ -12,6 +12,7 @@ import { existsSync } from "node:fs";
 import { BAD_SPECIES, BAD_INDIVIDUALS, NON_SPECIES, SYNONYM_DUPLICATES } from "../lib/bad-species";
 import { slugify, wrap } from "../lib/earth-math";
 import { normalizeLicense } from "../lib/licenses";
+import { isSensitive, maskPoint } from "../lib/sensitive-species";
 
 // A tiny signature of the track's own shape, for the catalog cards: the animal's
 // real path decimated and normalised into a 100x60 box, aspect preserved so a
@@ -141,16 +142,22 @@ async function main() {
   const manifest: any[] = [];
   let written = 0, named = 0;
   const licCount: Record<string, number> = {};
+  let blurredCount = 0;
   const missingAttrib: string[] = [];
 
   for (const b of best.values()) {
     const P = (raw.get(b.id) ?? []).sort((a, z) => a.t - z.t);
     if (P.length < 20) continue;
     const step = Math.max(1, Math.floor(P.length / TARGET));
+    // Positions are displaced for taxa that get poached or persecuted (see
+    // lib/sensitive-species). Temperature is sampled from the TRUE position first,
+    // so the thermal story stays accurate.
+    const blurred = isSensitive(b.sci);
     const pts = P.filter((_, i) => i % step === 0).map((p) => {
       const m = new Date(p.t).getUTCMonth();
       const tc = tempAt(p.la, p.lo, m);
-      return [+p.lo.toFixed(2), +p.la.toFixed(2), tc === null ? null : Math.round(tc), Math.round(p.t / 86400000)];
+      const [lo, la] = maskPoint(p.lo, p.la, b.sci);
+      return [lo, la, tc === null ? null : Math.round(tc), Math.round(p.t / 86400000)];
     });
     const temps = pts.map((p) => p[2]).filter((v): v is number => v !== null).sort((a, z) => a - z);
     const band = temps.length ? temps[Math.floor(temps.length * 0.95)] - temps[Math.floor(temps.length * 0.05)] : null;
@@ -182,11 +189,12 @@ async function main() {
     const km = Math.round(b.km), days = Math.round(b.days);
     const note = CURATED[b.sci] || `${n(km)} km tracked over ${n(days)} days`;
     const attrib = dsMap.get(b.ds) ?? null;
+    if (blurred) blurredCount++;
     if (attrib) licCount[attrib.license] = (licCount[attrib.license] || 0) + 1;
     else missingAttrib.push(b.sci);
 
     writeFileSync(R(`public/data/journey/${slug}.json`), JSON.stringify({
-      slug, sci: b.sci, common, group, note, km, days, fixes: P.length, band, attrib,
+      slug, sci: b.sci, common, group, note, km, days, fixes: P.length, band, attrib, blurred,
       latLo: +b.latLo.toFixed(1), latHi: +b.latHi.toFixed(1), tLo, tHi, kmPerDay, endGapKm, crossings,
       cam: { lon: +lonC.toFixed(1), lat: +latC.toFixed(1), lonSpan: Math.round(lonSpan), latSpan: Math.round(latSpan) },
       start: Math.round(P[0].t / 86400000), end: Math.round(P[P.length - 1].t / 86400000), pts,
@@ -207,6 +215,7 @@ async function main() {
   console.log(`✓ ${written} journeys written (${named} with a common name)`);
   console.log(`✓ public/data/journeys.json (${(JSON.stringify(manifest).length / 1024).toFixed(0)} KB)`);
   console.log(`  licenses: ${Object.entries(licCount).map(([k, v]) => `${k}=${v}`).join("  ")}`);
+  console.log(`  positions displaced (~20 km, shape preserved) for ${blurredCount} sensitive species`);
   if (missingAttrib.length) console.log(`  ⚠ ${missingAttrib.length} without attribution: ${missingAttrib.slice(0, 5).join(", ")}`);
 }
 main().catch((e) => { console.error(e); process.exit(1); });

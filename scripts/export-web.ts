@@ -6,6 +6,7 @@ import { createInterface } from "node:readline";
 import { fileURLToPath } from "node:url";
 import { BAD_SPECIES, BAD_INDIVIDUALS } from "../lib/bad-species";
 import { slugify } from "../lib/earth-math";
+import { maskPoint } from "../lib/sensitive-species";
 
 const R = (p: string) => fileURLToPath(new URL(`../${p}`, import.meta.url));
 const ebuf = readFileSync(R("etopo-0.25deg.bin"));
@@ -94,10 +95,14 @@ async function main() {
     const step = Math.max(1, Math.floor(P.length / TARGET));
     // each point: [lon, lat, °C, day] where day = days-since-1970 (integer, for
     // the clock + syncing the Earth's season to the animal's own dates)
+    // Positions displaced for poached/persecuted taxa (lib/sensitive-species); the
+    // golden eagle is both a flagship here and a flagged raptor. Temperature is
+    // still sampled from the true position.
     const pts = P.filter((_, i) => i % step === 0).map((p) => {
       const m = new Date(p.t).getUTCMonth();
       const tc = tempAt(p.la, p.lo, m);
-      return [+p.lo.toFixed(2), +p.la.toFixed(2), tc === null ? null : Math.round(tc), Math.round(p.t / 86400000)];
+      const [lo, la] = maskPoint(p.lo, p.la, h.sci);
+      return [lo, la, tc === null ? null : Math.round(tc), Math.round(p.t / 86400000)];
     });
     const temps = pts.map((p) => p[2]).filter((v): v is number => v !== null).sort((a, b) => a - b);
     const band = temps.length ? temps[Math.floor(temps.length * 0.95)] - temps[Math.floor(temps.length * 0.05)] : null;
