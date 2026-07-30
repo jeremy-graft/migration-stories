@@ -15,7 +15,15 @@ const scriptFull = html.match(/<script>([\s\S]*?)<\/script>/)?.[1];
 if (!css || !scriptFull) throw new Error("could not extract <style>/<script> from landing.html");
 
 // body markup = everything between </style> and <script>
-const body = html.slice(html.indexOf("</style>") + "</style>".length, html.indexOf("<script>")).trim();
+let body = html.slice(html.indexOf("</style>") + "</style>".length, html.indexOf("<script>")).trim();
+
+// landing.html links the findings report at its standalone artifact URL, which is
+// correct for the standalone artifact. On the site the report lives at /findings,
+// so point there instead: an off-site link from our own domain reads as broken and
+// sends readers away. One source, two correct destinations.
+const REPORT_ARTIFACT = /https:\/\/claude\.ai\/code\/artifact\/30239285-1e14-495d-b4b2-426f135d36ed/g;
+if (!REPORT_ARTIFACT.test(body)) console.warn("⚠ report artifact link not found in landing.html — check the CTA href");
+body = body.replace(REPORT_ARTIFACT, "/findings");
 
 // the script's first statement is `const D = {…};` — lift that object out to a
 // static JSON file and turn the rest into a function of D.

@@ -15,7 +15,8 @@ export default function SiteFooter() {
         <span className="footLabel">Environment</span> ETOPO1 relief &middot; ERA5 monthly temperature via Open-Meteo.
       </p>
       <p>
-        <Link href="/explore">All species</Link> &middot; <Link href="/">Home</Link>
+        <Link href="/explore">All species</Link> &middot; <Link href="/findings">Findings and limits</Link> &middot;{" "}
+        <Link href="/">Home</Link>
       </p>
     </footer>
   );

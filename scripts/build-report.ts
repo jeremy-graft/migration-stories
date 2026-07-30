@@ -264,6 +264,11 @@ const html = `<title>What We Know About Where Animals Go</title>
   }
   draw();
   addEventListener("resize", draw);
+  // Redraw whenever the container itself gets a size, not just when the WINDOW
+  // resizes: if this mounts while the page has no layout width yet (hidden tab,
+  // late layout, embedded), sizing off clientWidth once leaves a 19px-wide map
+  // that never recovers, because no window resize is coming.
+  if (window.ResizeObserver && cv.parentElement) new ResizeObserver(draw).observe(cv.parentElement);
   new MutationObserver(draw).observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]});
   matchMedia("(prefers-color-scheme:dark)").addEventListener("change", draw);
 </script>`;

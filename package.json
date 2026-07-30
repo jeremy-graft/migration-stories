@@ -22,6 +22,8 @@
     "build-landing": "tsx scripts/build-landing.ts",
     "gen-hero": "tsx scripts/gen-hero-component.ts",
     "build-hero": "tsx scripts/export-web.ts && tsx scripts/build-landing.ts && tsx scripts/gen-hero-component.ts",
+    "build-findings": "tsx scripts/export-findings.ts && tsx scripts/build-report.ts && tsx scripts/gen-report-component.ts",
+    "export-journeys": "tsx scripts/export-journeys.ts",
     "test": "node --import tsx --test tests/licenses.test.ts tests/track.test.ts tests/gbif-predicate.test.ts tests/movebank.test.ts"
   },
   "dependencies": {
