@@ -7,3 +7,26 @@
 
 [build.environment]
   NODE_VERSION = "20"
+
+# Security headers. The site is static with no accounts, cookies or user input, so
+# the exposure is small, but these are free and close the obvious gaps.
+#
+# 'unsafe-inline' is required for script/style because the hero and the findings
+# report are injected as inline <script>/<style> at runtime (one generated source
+# serving both this site and the standalone artifacts). Everything else is locked
+# to same-origin, so an injected script still could not load external code, phone
+# data out to another host, or frame the page.
+[[headers]]
+  for = "/*"
+  [headers.values]
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'none'; object-src 'none'"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "geolocation=(), camera=(), microphone=(), payment=(), usb=()"
+    X-Frame-Options = "DENY"
+
+# The generated payloads are content-addressed by the build; let them cache hard.
+[[headers]]
+  for = "/data/*"
+  [headers.values]
+    Cache-Control = "public, max-age=3600, must-revalidate"
