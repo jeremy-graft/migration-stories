@@ -3,3 +3,18 @@ allowBuilds:
   sharp: true
 # Don't shell out to `pnpm install` before each `pnpm run` script.
 verifyDepsBeforeRun: false
+
+# Next pins postcss 8.4.31, which carries several advisories (a </style> XSS, a
+# path traversal in source-map auto-loading, and an indefinite loop in the nanoid
+# it depends on). None are reachable here: postcss only ever runs at BUILD time,
+# over CSS we wrote ourselves, and the deployed site is static files. This lifts
+# it to a patched line anyway so the audit stays honest and a real finding can't
+# hide in the noise. Drop the override once Next ships a newer postcss.
+overrides:
+  postcss: ^8.5.6
+
+# next pulls sharp for image optimisation, which this site never uses
+# (`images.unoptimized`, static export). Skipping it drops a native binary and
+# its libvips CVEs from the tree entirely.
+ignoredOptionalDependencies:
+  - sharp
