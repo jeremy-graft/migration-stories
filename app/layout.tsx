@@ -41,7 +41,13 @@ export const metadata: Metadata = {
 // installation". The automatic mode was previously set to "excluding visitor data
 // in the EU", which injected nothing for European visitors and is why the beacon
 // appeared to be running while measuring almost nobody.
-const CF_BEACON = process.env.NEXT_PUBLIC_CF_BEACON_TOKEN || "4687375b48e444f79d62e983cf317425";
+const CF_TOKEN_FALLBACK = "4687375b48e444f79d62e983cf317425";
+// Accept a bare token OR a whole pasted <script> snippet: Cloudflare's dashboard
+// hands you the full snippet, and pasting that into the env var produced a beacon
+// whose "token" was the entire snippet, which Cloudflare silently rejects. Pull
+// the first 32-hex id out of whatever we are given and ignore anything else.
+const CF_BEACON =
+  (process.env.NEXT_PUBLIC_CF_BEACON_TOKEN || "").match(/[0-9a-f]{32}/i)?.[0] || CF_TOKEN_FALLBACK;
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   // Body styling is owned by the hero's own stylesheet (injected by <Hero/>), so
