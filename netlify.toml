@@ -13,13 +13,17 @@
 #
 # 'unsafe-inline' is required for script/style because the hero and the findings
 # report are injected as inline <script>/<style> at runtime (one generated source
-# serving both this site and the standalone artifacts). Everything else is locked
-# to same-origin, so an injected script still could not load external code, phone
-# data out to another host, or frame the page.
+# serving both this site and the standalone artifacts).
+#
+# The two cloudflareinsights hosts are the ONLY third parties this site talks to:
+# static.cloudflareinsights.com serves the analytics beacon, and the beacon POSTs
+# aggregate page views back to cloudflareinsights.com. Named explicitly rather
+# than opened with a wildcard, so an injected script still cannot load external
+# code from anywhere else, phone data out to another host, or frame the page.
 [[headers]]
   for = "/*"
   [headers.values]
-    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'none'; object-src 'none'"
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self' https://cloudflareinsights.com; frame-ancestors 'none'; base-uri 'self'; form-action 'none'; object-src 'none'"
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "strict-origin-when-cross-origin"
     Permissions-Policy = "geolocation=(), camera=(), microphone=(), payment=(), usb=()"

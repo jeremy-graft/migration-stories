@@ -15,6 +15,10 @@ export default function SiteFooter() {
         <span className="footLabel">Environment</span> ETOPO1 relief &middot; ERA5 monthly temperature via Open-Meteo.
       </p>
       <p>
+        <span className="footLabel">Privacy</span> No cookies, no advertising, no cross-site tracking. Visits are
+        counted anonymously and in aggregate, so we can see that a page was read but never who read it.
+      </p>
+      <p>
         <Link href="/explore">All species</Link> &middot; <Link href="/findings">Findings and limits</Link> &middot;{" "}
         <Link href="/">Home</Link>
       </p>

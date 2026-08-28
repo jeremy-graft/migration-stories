@@ -25,6 +25,16 @@ const REPORT_ARTIFACT = /https:\/\/claude\.ai\/code\/artifact\/30239285-1e14-495
 if (!REPORT_ARTIFACT.test(body)) console.warn("⚠ report artifact link not found in landing.html — check the CTA href");
 body = body.replace(REPORT_ARTIFACT, "/findings");
 
+// The site counts visits (Cloudflare Web Analytics, aggregate and cookieless);
+// the standalone artifact does not. Say so where people actually read, which is
+// the landing page. Injected here so landing.html itself stays untouched.
+const ENV_LINE = '<p><span class="label">Environment</span>';
+const PRIVACY_LINE =
+  '<p><span class="label">Privacy</span> No cookies, no advertising, no cross-site tracking. ' +
+  'Visits are counted anonymously and in aggregate, so we can see that a page was read but never who read it.</p>';
+if (!body.includes(ENV_LINE)) console.warn("⚠ landing footer anchor not found — privacy line not added");
+else body = body.replace(ENV_LINE, PRIVACY_LINE + ENV_LINE);
+
 // the script's first statement is `const D = {…};` — lift that object out to a
 // static JSON file and turn the rest into a function of D.
 const script = scriptFull.trimStart();
