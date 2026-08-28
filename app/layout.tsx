@@ -30,9 +30,18 @@ export const metadata: Metadata = {
 // Cloudflare Web Analytics: aggregate page views only. No cookies, no
 // localStorage, no cross-site identifiers, nothing that follows a person between
 // sites, which is why it needs no consent banner under the ePrivacy rules.
-// Baked in at build time from an env var, so the token never lives in the repo
-// and a build without it simply ships no beacon at all (local dev included).
-const CF_BEACON = process.env.NEXT_PUBLIC_CF_BEACON_TOKEN;
+//
+// The site token is committed deliberately. It is PUBLIC by design: it ships in
+// the page source of every site that uses Cloudflare Web Analytics, so keeping it
+// in an env var would hide it from nobody while adding a step that silently
+// breaks measurement if it is ever forgotten. NEXT_PUBLIC_CF_BEACON_TOKEN still
+// overrides it, so the token can be rotated without a code change.
+//
+// NOTE: in the Cloudflare dashboard this site must stay on "Enable with JS Snippet
+// installation". The automatic mode was previously set to "excluding visitor data
+// in the EU", which injected nothing for European visitors and is why the beacon
+// appeared to be running while measuring almost nobody.
+const CF_BEACON = process.env.NEXT_PUBLIC_CF_BEACON_TOKEN || "4687375b48e444f79d62e983cf317425";
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   // Body styling is owned by the hero's own stylesheet (injected by <Hero/>), so
@@ -44,7 +53,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         {children}
         {CF_BEACON ? (
           <script
-            defer
+            type="module"
             src="https://static.cloudflareinsights.com/beacon.min.js"
             data-cf-beacon={JSON.stringify({ token: CF_BEACON })}
           />

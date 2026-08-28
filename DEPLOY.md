@@ -59,23 +59,28 @@ banner under the EU ePrivacy rules. The footer says so plainly.
 It is off unless a token is present, so local builds and the standalone Claude
 artifacts ship no beacon at all.
 
-### Turning it on
+### How it is wired
 
-1. Cloudflare dashboard → **Analytics & Logs → Web Analytics** → add
-   `whereanimalsgo.com`. Choose the **manual / JS snippet** option (not automatic
-   injection: the beacon is committed to this repo instead, so it survives a move
-   off Cloudflare's proxy and is visible in version control).
-2. Copy the site token out of the snippet it shows you.
-3. Netlify → your site → **Site configuration → Environment variables** → add:
+The site token is committed in `app/layout.tsx`. That is deliberate: the token is
+public by design and ships in the page source of every site using Cloudflare Web
+Analytics, so hiding it in an env var would conceal it from nobody while adding a
+step that silently breaks measurement when forgotten. Set
+`NEXT_PUBLIC_CF_BEACON_TOKEN` in Netlify to override it if you ever rotate it.
 
-   `NEXT_PUBLIC_CF_BEACON_TOKEN` = the token
+### The setting that matters
 
-4. Trigger a deploy (or push any commit). The beacon only appears in builds that
-   have the variable set.
+In Cloudflare → Analytics & Logs → Web Analytics → Manage site, this site must be
+on **"Enable with JS Snippet installation"**.
 
-The token is public by design; it is visible in the page source of every site
-that uses Cloudflare Web Analytics. It is kept in an env var rather than the repo
-so it can be rotated or removed without a code change.
+Do not use the automatic modes. `whereanimalsgo.com` was previously on *"Enable,
+excluding visitor data in the EU"*, which injects nothing for European visitors.
+The dashboard looked healthy while the beacon was reaching almost nobody, since
+most of this site's readers are in Europe. Automatic injection also rewrites HTML
+at the edge, so it stops working the moment the domain leaves Cloudflare's proxy,
+again with no warning.
+
+If you ever switch back to an automatic mode, remove the beacon from
+`app/layout.tsx` first, or every visit will be counted twice.
 
 ### Content-Security-Policy
 
