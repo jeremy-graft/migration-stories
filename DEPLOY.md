@@ -56,8 +56,10 @@ countries and devices. No cookies, no localStorage, no cross-site identifiers,
 nothing that follows a person between sites, which is why it needs no consent
 banner under the EU ePrivacy rules. The footer says so plainly.
 
-It is off unless a token is present, so local builds and the standalone Claude
-artifacts ship no beacon at all.
+The token is committed, so any build of this site carries the beacon, local ones
+included. The standalone Claude artifacts are generated from `landing.html` and
+carry no analytics at all, which is why the privacy line in their footer is
+injected only into the website copy.
 
 ### How it is wired
 
